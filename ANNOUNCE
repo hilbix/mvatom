@@ -1,0 +1,7 @@
+First version.  Nearly untested.
+
+The "read from stdin" feature not yet supported, so you cannot do:
+<pre>
+cat filelist | mvatom -d dest -
+cat filelist | mvatom -b -
+</pre>

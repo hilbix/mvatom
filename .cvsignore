@@ -1,0 +1,5 @@
+Makefile
+Makefile.md5
+*.d
+mvatom
+mvatom_version.h
