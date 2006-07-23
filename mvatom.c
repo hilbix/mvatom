@@ -1,6 +1,6 @@
 /* $Header$
  *
- * Atomic file move.
+ * Atomic file move utility.
  *
  * Copyright (C)2006 by Valentin Hilbig
  *
@@ -20,9 +20,11 @@
  * USA
  *
  * $Log$
- * Revision 1.1  2006-07-22 23:47:58  tino
- * First version for testing
+ * Revision 1.2  2006-07-23 00:06:19  tino
+ * Bugs removed, working now
  *
+ * Revision 1.1  2006/07/22 23:47:58  tino
+ * First version for testing
  */
 
 #include "tino/filetool.h"
@@ -75,7 +77,7 @@ do_rename(const char *name, const char *to)
 {
   if (rename(name, to))
     {
-      tino_error("cannot rename %s -> %s", name, to);
+      tino_err("cannot rename %s -> %s", name, to);
       return;
     }
   verbose("rename: %s -> %s", name, to);	
@@ -84,9 +86,9 @@ do_rename(const char *name, const char *to)
 static void
 do_rename_backup(const char *old, const char *new)
 {
-  if (!tino_file_notexists(old))
+  if (tino_file_notexists(old))
     {
-      tino_error("missing old name for rename: %s", old);
+      tino_err("missing old name for rename: %s", old);
       return;
     }
   if (!tino_file_notexists(new))
@@ -95,7 +97,7 @@ do_rename_backup(const char *old, const char *new)
 
       if (!m_backup)
 	{
-	  tino_error("existing destination for rename: %s", new);
+	  tino_err("existing destination for rename: %s", new);
 	  return;
 	}
       tmp	= tino_file_backupname(NULL, 0, new);
@@ -112,9 +114,9 @@ do_mvaway(const char *name)
 {
   char	*buf;
 
-  if (!tino_file_notexists(name))	
+  if (tino_file_notexists(name))	
     {
-      tino_error("missing file to move away: %s", name);
+      tino_err("missing file to move away: %s", name);
       return;
     }
   buf	= tino_file_backupname(NULL, 0, name);
@@ -172,9 +174,9 @@ do_mvdest(const char *name)
 static void
 mvdest(const char *name)
 {
-  if (!tino_file_notdir(m_dest))
+  if (tino_file_notdir(m_dest))
     {
-      tino_error((tino_file_notexists(m_dest) ? "missing destination directory: %s" : "existing destination not a directory: %s"), m_dest);
+      tino_err((tino_file_notexists(m_dest) ? "missing destination directory: %s" : "existing destination not a directory: %s"), m_dest);
       return;
     }
   if (strcmp(name, "-"))
@@ -248,7 +250,7 @@ main(int argc, char **argv)
   else if (m_backup && argc==argn+1)
     mvaway(argv[argn]);
   else if (argc!=argn+2)
-    tino_exit("rename needs 2 arguments");
+    tino_err("rename needs 2 arguments");
   else
     mvrename(argv[argn], argv[argn+1]);
   return errflag;
