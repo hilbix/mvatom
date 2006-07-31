@@ -1,0 +1,3 @@
+2006-08-01    <tino@firebird.03.softkill.net>
+
+	* mvatom.c (do_rename_backup, main): option -p added

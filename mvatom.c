@@ -20,7 +20,10 @@
  * USA
  *
  * $Log$
- * Revision 1.2  2006-07-23 00:06:19  tino
+ * Revision 1.3  2006-07-31 23:01:45  tino
+ * Option -p added (mkdir parents for dest)
+ *
+ * Revision 1.2  2006/07/23 00:06:19  tino
  * Bugs removed, working now
  *
  * Revision 1.1  2006/07/22 23:47:58  tino
@@ -34,7 +37,7 @@
 #include "mvatom_version.h"
 
 static int		errflag;
-static int		m_backup, m_ignore, m_nulls, m_relative, m_quiet, m_verbose;
+static int		m_backup, m_ignore, m_nulls, m_relative, m_quiet, m_verbose, m_mkdirs;
 static const char	*m_dest;
 
 /**********************************************************************/
@@ -104,6 +107,8 @@ do_rename_backup(const char *old, const char *new)
       do_rename(new, tmp);
       free(tmp);
     }
+  else if (m_mkdirs)
+    tino_file_mkdirs_forfile(NULL, new);
   do_rename(old, new);
 }
 
@@ -198,7 +203,7 @@ main(int argc, char **argv)
   argn	= tino_getopt(argc, argv, 1, 0,
 		      TINO_GETOPT_VERSION(MVATOM_VERSION)
 		      " name...\n"
-		      "	rename:		%s oldname newname\n"
+		      "	rename:		%s -r oldname newname\n"
 		      "	move:		%s -d dir name...\n"
 		      "	rename away:	%s -b name",
 
@@ -224,14 +229,18 @@ main(int argc, char **argv)
 		      , &m_dest,
 
 		      TINO_GETOPT_FLAG
-		      "r	append relative source path to dest\n"
-		      "		To rename within a directory without moving use:\n"
-		      "		mvatom -r /path/to/file/a b"
-		      , &m_relative,
+		      "p	create missing parent directories (for dest)"
+		      , &m_mkdirs,
 
 		      TINO_GETOPT_FLAG
 		      "q	silently fail"
 		      , &m_quiet,
+
+		      TINO_GETOPT_FLAG
+		      "r	append relative source path to dest (needs no -p)\n"
+		      "		To rename within a directory without moving use:\n"
+		      "		mvatom -r /path/to/file/a b"
+		      , &m_relative,
 
 		      TINO_GETOPT_FLAG
 		      "v	verbose"
