@@ -2,9 +2,11 @@ Move files by atomic rename instead of copy.
 # $Header$
 #
 # $Log$
-# Revision 1.1  2006-07-22 23:47:58  tino
-# First version for testing
+# Revision 1.2  2006-08-12 02:07:38  tino
+# corrected for option -o
 #
+# Revision 1.1  2006/07/22 23:47:58  tino
+# First version for testing
 
 Post-modern mv implementations re-invented the wheel which is no more round.
 If they cannot move they do a copy/unlink() operation which is unsatisfying,
@@ -16,13 +18,14 @@ This version here does what mv is supposed to do:
 It renames the target and fails if it cannot do the rename.  It does this using
 the rename() operation which is atomically (except for NFS, but this is an NFS bug).
 
-Another thing is that is never guesses something for the last argument like mv does.
-So it always works reliably.  You know what it does from looking at the command line,
-and this does not depend if the last arg happens to be a directory or not.
+Another thing is that it only guesses something for the last argument like mv does
+if it is instructed to do so.  So it always works reliably.  You know what it does
+from looking at the command line, and if no heuristics are given this does not
+depend from the last arg beeing a directory or not.
 
 If the destination is a directory this must be given as an option to mvatom.
 Also all options are simple and clear and there is no way to overwrite files,
 as mvatom never overwrites files.
 
 Another thing is, that you can "move away" files with mvatom, too.  This is done
-with the "backup" feature, where existing destination can be renamed.
+with the "backup" feature, where an existing destination can be renamed.
