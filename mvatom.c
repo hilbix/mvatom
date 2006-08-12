@@ -20,7 +20,10 @@
  * USA
  *
  * $Log$
- * Revision 1.3  2006-07-31 23:01:45  tino
+ * Revision 1.4  2006-08-12 02:03:35  tino
+ * option -o and some minor changes
+ *
+ * Revision 1.3  2006/07/31 23:01:45  tino
  * Option -p added (mkdir parents for dest)
  *
  * Revision 1.2  2006/07/23 00:06:19  tino
@@ -37,7 +40,7 @@
 #include "mvatom_version.h"
 
 static int		errflag;
-static int		m_backup, m_ignore, m_nulls, m_relative, m_quiet, m_verbose, m_mkdirs;
+static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs;
 static const char	*m_dest;
 
 /**********************************************************************/
@@ -71,6 +74,11 @@ verbose(const char *s, ...)
 static const char *
 read_dest(void)
 {
+  if (!m_nulls && !m_lines)
+    {
+      tino_err("missing option -l or -0 to read stdin");
+      return 0;
+    }
   tino_fatal("read from stdin not yet implemented");
   return 0;
 }
@@ -170,7 +178,7 @@ do_mvdest(const char *name)
       tino_file_mkdirs_forfile(m_dest, targ);
     }
   else
-    targ	= tino_file_filenameptr(name);
+    targ	= tino_file_filenameptr_const(name);
   dest	= tino_file_glue_path(NULL, 0, m_dest, targ);
   do_rename_backup(name, dest);
   free(dest);
@@ -193,33 +201,43 @@ mvdest(const char *name)
 
 /**********************************************************************/
 
+static int
+is_directory_target(const char *name)
+{
+  const char	*tmp;
+
+  tmp	= tino_file_filenameptr_const(name);
+  if (*tmp && strcmp(tmp, ".") && strcmp(tmp, ".."))
+    return 0;
+  return !tino_file_notdir(name);
+}
+
 int
 main(int argc, char **argv)
 {
-  int		argn;
+  int	argn, m_original;
 
   tino_verror_fn	= verror_fn;
 
   argn	= tino_getopt(argc, argv, 1, 0,
 		      TINO_GETOPT_VERSION(MVATOM_VERSION)
 		      " name...\n"
+		      "	if name is - lines are read from stdin.\n"
 		      "	rename:		%s -r oldname newname\n"
 		      "	move:		%s -d dir name...\n"
-		      "	rename away:	%s -b name",
+		      "	rename away:	%s -b name\n"
+		      "	convenience:	alias mv='mvatom -o'",
 
 		      TINO_GETOPT_USAGE
 		      "h	this help"
 		      ,
-
+#if 0
 		      TINO_GETOPT_FLAG
-		      "0	read 0 terminated lines from stdin\n"
-		      "		example: find . -print 0 | mvatom -0b -"
+		      "0	(This option is 'number zero', not a big O!)\n"
+		      "		read 0 terminated lines from stdin\n"
+		      "		example: find . -print0 | mvatom -0b -"
 		      , &m_nulls,
-
-		      TINO_GETOPT_FLAG
-		      "i	ignore (common) errors"
-		      , &m_ignore,
-
+#endif
 		      TINO_GETOPT_FLAG
 		      "b	backup existing destination to .~#~"
 		      , &m_backup,
@@ -227,6 +245,20 @@ main(int argc, char **argv)
 		      TINO_GETOPT_STRING
 		      "d dir	target directory"
 		      , &m_dest,
+
+		      TINO_GETOPT_FLAG
+		      "i	ignore (common) errors"
+		      , &m_ignore,
+#if 0
+		      TINO_GETOPT_FLAG
+		      "l	read lines from stdin, enables - as argument\n"
+		      "		example: find . -print | mvatom -lb -"
+		      , &m_lines,
+#endif
+		      TINO_GETOPT_FLAG
+		      "o	original behavior if directory is the last target.\n"
+		      "		The last argument must end in a / or must be . or .."
+		      , &m_original,
 
 		      TINO_GETOPT_FLAG
 		      "p	create missing parent directories (for dest)"
@@ -251,6 +283,8 @@ main(int argc, char **argv)
   if (argn<=0)
     return 1;
 
+  if (m_original && !m_dest && argn+1<argc && is_directory_target(argv[argc-1]))
+    m_dest	= argv[--argc];
   if (m_dest)
     {
       while (argn<argc)
@@ -258,9 +292,9 @@ main(int argc, char **argv)
     }
   else if (m_backup && argc==argn+1)
     mvaway(argv[argn]);
-  else if (argc!=argn+2)
-    tino_err("rename needs 2 arguments");
-  else
+  else if (argc==argn+2)
     mvrename(argv[argn], argv[argn+1]);
+  else
+    tino_err("rename needs 2 arguments");
   return errflag;
 }

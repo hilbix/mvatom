@@ -1,3 +1,8 @@
+2006-08-12    <tino@firebird.03.softkill.net>
+
+	* mvatom.c (main): option -o added
+	(read_dest, main): option -l prepared, option -0 disabled
+
 2006-08-01    <tino@firebird.03.softkill.net>
 
 	* mvatom.c (do_rename_backup, main): option -p added
