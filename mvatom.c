@@ -20,7 +20,10 @@
  * USA
  *
  * $Log$
- * Revision 1.4  2006-08-12 02:03:35  tino
+ * Revision 1.5  2006-09-27 20:36:40  tino
+ * see ANNOUNCE and ChangeLog
+ *
+ * Revision 1.4  2006/08/12 02:03:35  tino
  * option -o and some minor changes
  *
  * Revision 1.3  2006/07/31 23:01:45  tino
@@ -36,6 +39,7 @@
 #include "tino/filetool.h"
 #include "tino/ex.h"
 #include "tino/getopt.h"
+#include "tino/buf_line.h"
 
 #include "mvatom_version.h"
 
@@ -71,16 +75,32 @@ verbose(const char *s, ...)
 
 /**********************************************************************/
 
+static void
+do_mkdirs(const char *path, const char *file)
+{
+  switch (tino_file_mkdirs_forfile(path, file))
+    {
+    case -1:
+      tino_err("failed: mkdir for %s%s%s", path ? path : "", path ? "/" : "", file);
+      break;
+      
+    case 1:
+      verbose("mkdir for %s%s%s", path ? path : "", path ? "/" : "", file);
+      break;
+    }
+}
+
 static const char *
 read_dest(void)
 {
+  static TINO_BUF buf;
+
   if (!m_nulls && !m_lines)
     {
       tino_err("missing option -l or -0 to read stdin");
       return 0;
     }
-  tino_fatal("read from stdin not yet implemented");
-  return 0;
+  return tino_buf_line_read(&buf, 0, (m_nulls ? 0 : '\n'));
 }
 
 static void
@@ -116,7 +136,7 @@ do_rename_backup(const char *old, const char *new)
       free(tmp);
     }
   else if (m_mkdirs)
-    tino_file_mkdirs_forfile(NULL, new);
+    do_mkdirs(NULL, new);
   do_rename(old, new);
 }
 
@@ -175,7 +195,7 @@ do_mvdest(const char *name)
   if (m_relative)
     {
       targ	= tino_file_skip_root_const(name);
-      tino_file_mkdirs_forfile(m_dest, targ);
+      do_mkdirs(m_dest, targ);
     }
   else
     targ	= tino_file_filenameptr_const(name);
@@ -231,13 +251,13 @@ main(int argc, char **argv)
 		      TINO_GETOPT_USAGE
 		      "h	this help"
 		      ,
-#if 0
+
 		      TINO_GETOPT_FLAG
 		      "0	(This option is 'number zero', not a big O!)\n"
 		      "		read 0 terminated lines from stdin\n"
 		      "		example: find . -print0 | mvatom -0b -"
 		      , &m_nulls,
-#endif
+
 		      TINO_GETOPT_FLAG
 		      "b	backup existing destination to .~#~"
 		      , &m_backup,
@@ -249,12 +269,12 @@ main(int argc, char **argv)
 		      TINO_GETOPT_FLAG
 		      "i	ignore (common) errors"
 		      , &m_ignore,
-#if 0
+
 		      TINO_GETOPT_FLAG
 		      "l	read lines from stdin, enables - as argument\n"
 		      "		example: find . -print | mvatom -lb -"
 		      , &m_lines,
-#endif
+
 		      TINO_GETOPT_FLAG
 		      "o	original behavior if directory is the last target.\n"
 		      "		The last argument must end in a / or must be . or .."

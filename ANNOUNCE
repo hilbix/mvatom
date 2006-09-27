@@ -1,10 +1,3 @@
-Options -o and -p added
+Options -l and -0 added, bug with -p removed
 
-option -o is "original" behavior, such that <nobr>"mvatom file file
-file dir/"</nobr> moves into directory.  However it must end in a /,
-else it will not detect this case for safety.
-
-option -p creates the missing directories in destinations.  Note that
-option -r like in <nobr>"mvatom -rd the/dir path/to/file"</nobr>
-already creates path/to in the/dir for file.  But it will not create
-the/dir, for this you must give option -p (like in "mkdir -p").
+Option -l (lines) and -0 (zero) allow argument reading from stdin.
