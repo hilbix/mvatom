@@ -1,3 +1,1 @@
-Options -l and -0 added, bug with -p removed
-
-Option -l (lines) and -0 (zero) allow argument reading from stdin.
+Newer version of tinolib to compile under Ubuntu 64 bit systems.

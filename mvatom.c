@@ -20,7 +20,10 @@
  * USA
  *
  * $Log$
- * Revision 1.5  2006-09-27 20:36:40  tino
+ * Revision 1.6  2006-10-21 01:59:00  tino
+ * Ubuntu fixes (new va_* functions)
+ *
+ * Revision 1.5  2006/09/27 20:36:40  tino
  * see ANNOUNCE and ChangeLog
  *
  * Revision 1.4  2006/08/12 02:03:35  tino
@@ -50,7 +53,7 @@ static const char	*m_dest;
 /**********************************************************************/
 
 static void
-verror_fn(const char *prefix, const char *s, va_list list, int err)
+verror_fn(const char *prefix, const char *s, TINO_VA_LIST list, int err)
 {
   if (!m_quiet)
     tino_verror_std(prefix, s, list, err);
@@ -62,14 +65,14 @@ verror_fn(const char *prefix, const char *s, va_list list, int err)
 static void
 verbose(const char *s, ...)
 {
-  va_list	list;
+  tino_va_list	list;
 
   if (!m_verbose)
     return;
 
-  va_start(list, s);
-  vprintf(s, list);
-  va_end(list);
+  tino_va_start(list, s);
+  vprintf(s, tino_va_get(list));
+  tino_va_end(list);
   printf("\n");
 }
 

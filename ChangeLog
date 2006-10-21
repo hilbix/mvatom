@@ -1,3 +1,7 @@
+2006-10-04    <tino@firebird.03.softkill.net>
+
+	* mvatom.c: tino_va_* routines
+
 2006-09-27    <tino@firebird.03.softkill.net>
 
 	* mvatom.c (do_mvaway): now reads lines
