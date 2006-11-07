@@ -1,1 +1,4 @@
-Newer version of tinolib to compile under Ubuntu 64 bit systems.
+Script cmpanddel.sh added
+
+The script is nearly untested.  It is an old script now changed to use mvatom.
+Those changes have not been tested much yet, the basic method is proven to work.

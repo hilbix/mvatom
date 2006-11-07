@@ -22,7 +22,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 # $Log$
-# Revision 1.1  2006-07-22 23:47:58  tino
+# Revision 1.2  2006-11-07 12:41:20  tino
+# cmpanddel.sh added
+#
+# Revision 1.1  2006/07/22 23:47:58  tino
 # First version for testing
 #
 
@@ -30,7 +33,7 @@
        OBJS=
 # Additional (fixed) installs for
 # bin sbin lib etc man share/man inf share/inf respectively
- INSTALLBIN=
+ INSTALLBIN=cmpanddel.sh
 INSTALLSBIN=
  INSTALLLIB=
  INSTALLETC=
