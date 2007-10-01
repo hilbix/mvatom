@@ -21,11 +21,19 @@
 # USA
 #
 # $Log$
+# Revision 1.2  2007-10-01 16:21:17  tino
+# Made more readable
+#
 # Revision 1.1  2006-11-07 12:41:20  tino
 # cmpanddel.sh added
-#
 
 set -e
+
+oops()
+{
+echo "$*" >&2
+exit 1
+}
 
 maketmpdir()
 {
@@ -44,11 +52,8 @@ trap '[ -e "$pf" ] || rm -f "$pl"; rmdir "$tmpdir"' 0
 
 usage()
 {
-if [ 2 != $# -a 3 != $# ]
-then
-	echo "Usage: `basename "$0"` directory-to-cleanup directory-to-compare [tmpdirname]"
-	exit
-fi
+[ 2 = $# -o 3 = $# ] ||
+oops "Usage: `basename "$0"` directory-to-cleanup directory-to-compare [tmpdirname]"
 }
 
 warn()
@@ -81,11 +86,8 @@ read
 
 prot()
 {
-if [ -e "$pf" ]
-then
-	echo "internal error: $pf exists"
-	exit
-fi
+[ ! -e "$pf" ] || oops "internal error: $pf exists"
+
 echo "$1" > "$pl"
 mvatom "$1" "$pf"
 unpf="$1"
@@ -93,23 +95,9 @@ unpf="$1"
 
 unp()
 {
-if [ -z "$unpf" ]
-then
-	echo "internal error: variable not set"
-	exit
-fi
-
-if [ -e "$unpf" ]
-then
-	echo "internal error: $unpf exists"
-	exit
-fi
-
-if [ ".$unpf" != ".`cat "$pl"`" ]
-then
-	echo "internal error: $unpf does not match $pl"
-	exit
-fi
+[ -n "$unpf" ] || oops "internal error: variable not set"
+[ ! -e "$unpf" ] || oops "internal error: $unpf exists"
+[ ".$unpf" = ".`cat "$pl"`" ] || oops "internal error: $unpf does not match $pl"
 
 mvatom "$pf" "$unpf"
 unpf=""
@@ -230,7 +218,7 @@ do
 	cmpsoftlink "$a"
 done
 
-find "$SRC" -type d -name "$tmpdir" -prune -o -depth -type d -printf "%P\n" |
+find "$SRC" -depth -type d -name "$tmpdir" -prune -o -type d -printf "%P\n" |
 while read -r a
 do
 	[ -z "$a" ] || cmpdir "$a"
