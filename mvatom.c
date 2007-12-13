@@ -2,7 +2,7 @@
  *
  * Atomic file move utility.
  *
- * Copyright (C)2006 by Valentin Hilbig
+ * Copyright (C)2006-2007 Valentin Hilbig <webmaster@scylla-charybdis.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -16,10 +16,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.7  2007-12-13 08:18:31  tino
+ * For dist
+ *
  * Revision 1.6  2006-10-21 01:59:00  tino
  * Ubuntu fixes (new va_* functions)
  *
@@ -39,6 +42,7 @@
  * First version for testing
  */
 
+#define TINO_NEED_OLD_ERR_FN
 #include "tino/filetool.h"
 #include "tino/ex.h"
 #include "tino/getopt.h"
@@ -53,10 +57,10 @@ static const char	*m_dest;
 /**********************************************************************/
 
 static void
-verror_fn(const char *prefix, const char *s, TINO_VA_LIST list, int err)
+verror_fn(const char *prefix, TINO_VA_LIST list, int err)
 {
   if (!m_quiet)
-    tino_verror_std(prefix, s, list, err);
+    tino_verror_std(prefix, list, err);
   if (!m_ignore)
     exit(1);
   errflag	= 1;
@@ -120,12 +124,12 @@ do_rename(const char *name, const char *to)
 static void
 do_rename_backup(const char *old, const char *new)
 {
-  if (tino_file_notexists(old))
+  if (tino_file_notexistsE(old))
     {
       tino_err("missing old name for rename: %s", old);
       return;
     }
-  if (!tino_file_notexists(new))
+  if (!tino_file_notexistsE(new))
     {
       char	*tmp;
 
@@ -150,7 +154,7 @@ do_mvaway(const char *name)
 {
   char	*buf;
 
-  if (tino_file_notexists(name))	
+  if (tino_file_notexistsE(name))	
     {
       tino_err("missing file to move away: %s", name);
       return;
@@ -210,9 +214,9 @@ do_mvdest(const char *name)
 static void
 mvdest(const char *name)
 {
-  if (tino_file_notdir(m_dest))
+  if (tino_file_notdirE(m_dest))
     {
-      tino_err((tino_file_notexists(m_dest) ? "missing destination directory: %s" : "existing destination not a directory: %s"), m_dest);
+      tino_err((tino_file_notexistsE(m_dest) ? "missing destination directory: %s" : "existing destination not a directory: %s"), m_dest);
       return;
     }
   if (strcmp(name, "-"))
@@ -232,7 +236,7 @@ is_directory_target(const char *name)
   tmp	= tino_file_filenameptr_const(name);
   if (*tmp && strcmp(tmp, ".") && strcmp(tmp, ".."))
     return 0;
-  return !tino_file_notdir(name);
+  return !tino_file_notdirE(name);
 }
 
 int
