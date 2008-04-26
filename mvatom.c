@@ -20,6 +20,9 @@
  * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.8  2008-04-26 14:08:31  tino
+ * Cosmetic change
+ *
  * Revision 1.7  2007-12-13 08:18:31  tino
  * For dist
  *
@@ -129,13 +132,16 @@ do_rename_backup(const char *old, const char *new)
       tino_err("missing old name for rename: %s", old);
       return;
     }
+  errno	= 0;	/* Do not report errors in case there is no error	*/
   if (!tino_file_notexistsE(new))
     {
       char	*tmp;
 
       if (!m_backup)
 	{
-	  tino_err("existing destination for rename: %s", new);
+	  /* Meaning corrected
+	   */
+	  tino_err("existing destination: %s", new);
 	  return;
 	}
       tmp	= tino_file_backupname(NULL, 0, new);
@@ -214,7 +220,7 @@ do_mvdest(const char *name)
 static void
 mvdest(const char *name)
 {
-  if (tino_file_notdirE(m_dest))
+  if (m_mkdirs<2 && tino_file_notdirE(m_dest))
     {
       tino_err((tino_file_notexistsE(m_dest) ? "missing destination directory: %s" : "existing destination not a directory: %s"), m_dest);
       return;
@@ -288,8 +294,11 @@ main(int argc, char **argv)
 		      , &m_original,
 
 		      TINO_GETOPT_FLAG
-		      "p	create missing parent directories (for dest)"
+		      TINO_GETOPT_MAX
+		      "p	create missing parent directories (for -r)\n"
+		      "		Give twice to create for -d, too"
 		      , &m_mkdirs,
+		      2,
 
 		      TINO_GETOPT_FLAG
 		      "q	silently fail"

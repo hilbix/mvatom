@@ -1,9 +1,4 @@
-Bugfix release and script cmpanddel.sh added
+Cosmetic change
 
-There was a long standing bug in option -p due to a bug in my library.
-Previously only one level of missing upstream directories were
-created.  However there was no other bad sideffect.
-
-The new script cmpanddel.sh is nearly untested.  It is an old script
-now changed to use mvatom.  Those changes have not been tested much
-yet, the basic method is proven to work.
+If the destination exists and option -b is not used, the output has
+been corrected to be more meaningful.

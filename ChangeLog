@@ -1,3 +1,8 @@
+2008-04-26  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* mvatom.c (do_rename_backup): If destination exists output now
+	makes more sense.
+
 2007-10-01  Valentin Hilbig  <tino@firebird.03.softkill.net>
 
 	* cmpanddel.sh (unpf): made more readable
