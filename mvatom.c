@@ -2,7 +2,7 @@
  *
  * Atomic file move utility.
  *
- * Copyright (C)2006-2007 Valentin Hilbig <webmaster@scylla-charybdis.com>
+ * Copyright (C)2006-2008 Valentin Hilbig <webmaster@scylla-charybdis.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,6 +20,9 @@
  * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.9  2008-05-04 04:28:22  tino
+ * Option -s added
+ *
  * Revision 1.8  2008-04-26 14:08:31  tino
  * Cosmetic change
  *
@@ -55,7 +58,7 @@
 
 static int		errflag;
 static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs;
-static const char	*m_dest;
+static const char	*m_dest, *m_source;
 
 /**********************************************************************/
 
@@ -84,6 +87,25 @@ verbose(const char *s, ...)
 }
 
 /**********************************************************************/
+
+/* This actually is a hack.
+ *
+ * We only have one single operation active at a time.  So we can use
+ * a static buffer here which keeps the intermediate string.
+ */
+static const char *
+get_src(const char *name)
+{
+  static TINO_BUF	buf;
+
+  if (!m_source)
+    return name;
+
+  tino_buf_resetO(&buf);
+  tino_buf_add_sO(&buf, m_source);
+  tino_buf_add_sO(&buf, name);
+  return tino_buf_get_sN(&buf);
+}
 
 static void
 do_mkdirs(const char *path, const char *file)
@@ -121,15 +143,18 @@ do_rename(const char *name, const char *to)
       tino_err("cannot rename %s -> %s", name, to);
       return;
     }
-  verbose("rename: %s -> %s", name, to);	
+  verbose("rename: %s -> %s", name, to);
 }
 
 static void
 do_rename_backup(const char *old, const char *new)
 {
-  if (tino_file_notexistsE(old))
+  const char	*src;
+
+  src	= get_src(old);
+  if (tino_file_notexistsE(src))
     {
-      tino_err("missing old name for rename: %s", old);
+      tino_err("missing old name for rename: %s", src);
       return;
     }
   errno	= 0;	/* Do not report errors in case there is no error	*/
@@ -146,11 +171,11 @@ do_rename_backup(const char *old, const char *new)
 	}
       tmp	= tino_file_backupname(NULL, 0, new);
       do_rename(new, tmp);
-      free(tmp);
+      tino_freeO(tmp);
     }
   else if (m_mkdirs)
     do_mkdirs(NULL, new);
-  do_rename(old, new);
+  do_rename(src, new);
 }
 
 /**********************************************************************/
@@ -158,15 +183,15 @@ do_rename_backup(const char *old, const char *new)
 static void
 do_mvaway(const char *name)
 {
-  char	*buf;
+  const char	*src;
 
-  if (tino_file_notexistsE(name))	
+  src	= get_src(name);
+  if (tino_file_notexistsE(src))
     {
-      tino_err("missing file to move away: %s", name);
+      tino_err("missing file to move away: %s", src);
       return;
     }
-  buf	= tino_file_backupname(NULL, 0, name);
-  do_rename(name, buf);
+  do_rename(src, tino_file_backupname(NULL, 0, name));
 }
 
 static void
@@ -214,7 +239,7 @@ do_mvdest(const char *name)
     targ	= tino_file_filenameptr_const(name);
   dest	= tino_file_glue_path(NULL, 0, m_dest, targ);
   do_rename_backup(name, dest);
-  free(dest);
+  tino_freeO(dest);
 }
 
 static void
@@ -309,6 +334,12 @@ main(int argc, char **argv)
 		      "		To rename within a directory without moving use:\n"
 		      "		mvatom -r /path/to/file/a b"
 		      , &m_relative,
+
+		      TINO_GETOPT_STRING
+		      "s src	append the given src prefix, for an usage like:\n"
+		      "		( cd whatever; ls -1; ) | mvatom -l -s whatever/ -d todir -\n"
+		      "		The source prefix is not a directory, it's a literal prefix"
+		      , &m_source,
 
 		      TINO_GETOPT_FLAG
 		      "v	verbose"

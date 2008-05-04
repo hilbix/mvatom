@@ -1,4 +1,10 @@
-Cosmetic change
+Option -s added
 
-If the destination exists and option -b is not used, the output has
-been corrected to be more meaningful.
+Option -s adds a literal prefix (this is without a /) to the source
+path.  It only does this on the fly when accessing the source file, so
+it has no effect on -p etc. options.
+
+This new option is mainly for use with option -l, for example see
+"dirlist" http://permalink.de/tino/dirlist which only outputs names,
+not pathes.  This way you can add the missing path again without
+complex "cd" constructs.
