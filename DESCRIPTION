@@ -2,6 +2,9 @@ Move files by atomic rename instead of copy.
 # $Header$
 #
 # $Log$
+# Revision 1.5  2008-05-07 15:12:17  tino
+# dirlist added
+#
 # Revision 1.4  2008-05-04 04:28:22  tino
 # Option -s added
 #
@@ -48,3 +51,6 @@ tree.  The protection is done by renaming the source first with
 mvatom.  It is not race condition free, so it is thought for all those
 lazy experienced sysadmins out there who exactly know what they are
 doing. </dl>
+
+There also now is "dirlist" a little helper to create directory lists.
+This is for mvatom option "-l -"

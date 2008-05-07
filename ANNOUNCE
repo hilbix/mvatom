@@ -1,10 +1,5 @@
-Option -s added
+dirlist added
 
-Option -s adds a literal prefix (this is without a /) to the source
-path.  It only does this on the fly when accessing the source file, so
-it has no effect on -p etc. options.
-
-This new option is mainly for use with option -l, for example see
-"dirlist" http://permalink.de/tino/dirlist which only outputs names,
-not pathes.  This way you can add the missing path again without
-complex "cd" constructs.
+Dirlist is a little program to create a directory listing.
+It is similar to "find", butwithout call to stat().
+This way it is faster for modern FS like ZFS-FUSE.
