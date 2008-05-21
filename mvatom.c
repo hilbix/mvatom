@@ -20,6 +20,9 @@
  * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.10  2008-05-21 17:58:55  tino
+ * Option -a
+ *
  * Revision 1.9  2008-05-04 04:28:22  tino
  * Option -s added
  *
@@ -57,8 +60,9 @@
 #include "mvatom_version.h"
 
 static int		errflag;
-static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs;
+static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs, m_append;
 static const char	*m_dest, *m_source;
+
 
 /**********************************************************************/
 
@@ -66,7 +70,7 @@ static void
 verror_fn(const char *prefix, TINO_VA_LIST list, int err)
 {
   if (!m_quiet)
-    tino_verror_std(prefix, list, err);
+    tino_verror_ext(list, err, "mvatom %s", prefix);
   if (!m_ignore)
     exit(1);
   errflag	= 1;
@@ -85,6 +89,7 @@ verbose(const char *s, ...)
   tino_va_end(list);
   printf("\n");
 }
+
 
 /**********************************************************************/
 
@@ -147,6 +152,16 @@ do_rename(const char *name, const char *to)
 }
 
 static void
+do_rename_away(const char *name, const char *rename)
+{
+  char	*tmp;
+
+  tmp	= tino_file_backupname(NULL, 0, rename);
+  do_rename(name, tmp);
+  tino_freeO(tmp);
+}
+
+static void
 do_rename_backup(const char *old, const char *new)
 {
   const char	*src;
@@ -160,8 +175,11 @@ do_rename_backup(const char *old, const char *new)
   errno	= 0;	/* Do not report errors in case there is no error	*/
   if (!tino_file_notexistsE(new))
     {
-      char	*tmp;
-
+      if (m_append)
+        {
+	  do_rename_away(src, new);
+	  return;
+	}
       if (!m_backup)
 	{
 	  /* Meaning corrected
@@ -169,14 +187,13 @@ do_rename_backup(const char *old, const char *new)
 	  tino_err("existing destination: %s", new);
 	  return;
 	}
-      tmp	= tino_file_backupname(NULL, 0, new);
-      do_rename(new, tmp);
-      tino_freeO(tmp);
+      do_rename_away(new, new);
     }
   else if (m_mkdirs)
     do_mkdirs(NULL, new);
   do_rename(src, new);
 }
+
 
 /**********************************************************************/
 
@@ -191,7 +208,7 @@ do_mvaway(const char *name)
       tino_err("missing file to move away: %s", src);
       return;
     }
-  do_rename(src, tino_file_backupname(NULL, 0, name));
+  do_rename_away(src, src);
 }
 
 static void
@@ -203,6 +220,7 @@ mvaway(const char *name)
     while ((name=read_dest())!=0)
       do_mvaway(name);
 }
+
 
 /**********************************************************************/
 
@@ -221,6 +239,7 @@ mvrename(const char *old, const char *new)
 {
   do_rename_backup(old, do_relative(old, new));
 }
+
 
 /**********************************************************************/
 
@@ -257,6 +276,7 @@ mvdest(const char *name)
       do_mvdest(name);
 }
 
+
 /**********************************************************************/
 
 static int
@@ -283,7 +303,7 @@ main(int argc, char **argv)
 		      "	if name is - lines are read from stdin.\n"
 		      "	rename:		%s -r oldname newname\n"
 		      "	move:		%s -d dir name...\n"
-		      "	rename away:	%s -b name\n"
+		      "	rename away:	%s -ab name\n"
 		      "	convenience:	alias mv='mvatom -o'",
 
 		      TINO_GETOPT_USAGE
@@ -297,7 +317,15 @@ main(int argc, char **argv)
 		      , &m_nulls,
 
 		      TINO_GETOPT_FLAG
-		      "b	backup existing destination to .~#~"
+		      "a	append .~#~ to source if destination exists.\n"
+		      "		This has less race conditions than option -b\n"
+		      "		Use with option -b to 'move away' a file."
+		      , &m_append,
+
+		      TINO_GETOPT_FLAG
+		      "b	backup existing destination to .~#~\n"
+		      "		Can only be used with option -a to 'move away' files.\n"
+		      "		On errors this might leave you with a renamed destination!"
 		      , &m_backup,
 
 		      TINO_GETOPT_STRING
@@ -352,16 +380,21 @@ main(int argc, char **argv)
 
   if (m_original && !m_dest && argn+1<argc && is_directory_target(argv[argc-1]))
     m_dest	= argv[--argc];
+  if (!m_dest && m_backup && m_append && argc==argn+1)
+    {
+      mvaway(argv[argn]);
+      return errflag;
+    }
+  if (m_backup && m_append)
+    tino_err("Options -a and -b cannot be used together this way");
   if (m_dest)
     {
       while (argn<argc)
 	mvdest(argv[argn++]);
     }
-  else if (m_backup && argc==argn+1)
-    mvaway(argv[argn]);
   else if (argc==argn+2)
     mvrename(argv[argn], argv[argn+1]);
   else
-    tino_err("rename needs 2 arguments");
+    tino_err("Option -d not present: Rename needs 2 arguments; For 'move away' now use options -ab");
   return errflag;
 }
