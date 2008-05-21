@@ -20,6 +20,9 @@
  * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.2  2008-05-21 17:56:53  tino
+ * Options
+ *
  * Revision 1.1  2008-05-07 15:12:17  tino
  * dirlist added
  *
@@ -32,12 +35,16 @@
 
 #include "mvatom_version.h"
 
+static int f_nulls, f_buffered, f_parent, f_nodot, f_source;
+
 static void
 dirlist(const char *dir, void *user)
 {
   DIR           *dp;
   struct dirent *d;
 
+  if (f_buffered)
+    setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
   if (!dir)
     dir=".";
   if ((dp=opendir(dir))==0)
@@ -50,10 +57,22 @@ dirlist(const char *dir, void *user)
       if (d->d_name[0]=='.')
         {
 	  if (d->d_name[1]==0 || (d->d_name[1]=='.' && d->d_name[2]==0))
+	    {
+	      if (!f_parent)
+		continue;
+	    }
+	  else if (f_nodot)
 	    continue;
 	}
-      printf("%s\n", d->d_name);
-      fflush(stdout);
+      if (f_source)
+	{
+	  fputs(dir, stdout);
+	  putchar('/');
+	}
+      fputs(d->d_name, stdout);
+      putchar(f_nulls ? 0 : '\n');
+      if (!f_buffered)
+        fflush(stdout);
     }
   if (closedir(dp))
     {
@@ -72,9 +91,29 @@ main(int argc, char **argv)
 		      0, 1,
 		      TINO_GETOPT_VERSION(MVATOM_VERSION)
 		      " [directory...]\n"
-		      "\tjust a primitive directory lister\n"
-		      "\tIt does lists the names in the directory regardless of type\n"
-		      "\tand skips only . and .., that's all."
+		      "\tA primitive directory lister, lists all names in a dir,\n"
+		      "\tskips . and .. by default."
 		      ,
+
+		      TINO_GETOPT_FLAG
+		      "0	write NUL terminated lines (instead of LF)"
+		      , &f_nulls,
+
+		      TINO_GETOPT_FLAG
+		      "f	full buffered IO (no flushs after each line)"
+		      , &f_buffered,
+
+		      TINO_GETOPT_FLAG
+		      "n	no dot-files, hides files starting with a ."
+		      , &f_nodot,
+
+		      TINO_GETOPT_FLAG
+		      "p	list . and .."
+		      , &f_parent,
+
+		      TINO_GETOPT_FLAG
+		      "s	add source path to output"
+		      , &f_source,
+
 		      NULL);
 }
