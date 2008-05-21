@@ -1,3 +1,13 @@
+2008-05-20  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* dirlist.c (main, dirlist): options -0 and -
+
+2008-05-13  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* mvatom.c (do_mvaway): bugfix for option -s and minor resouce
+	leakage fixed
+	(do_rename_backup, main): m_append (option -a) added
+
 2008-04-26  Valentin Hilbig  <tino@firebird.03.softkill.net>
 
 	* mvatom.c (do_rename_backup): If destination exists output now

@@ -1,5 +1,15 @@
-dirlist added
+Option -a added, "move away feature" fixed and renamed to option -ab,
+dirlist now has some options
 
-Dirlist is a little program to create a directory listing.
-It is similar to "find", butwithout call to stat().
-This way it is faster for modern FS like ZFS-FUSE.
+Option -a has less race conditions than option -b.  However the latest
+moved file then does not keep it's original name if an elder file with
+same name exists.
+
+The "move away feature" had a bug in conjunction with option -s.  This
+bug has been fixed.
+
+The "move away feature" now needs both options -a and -b present to
+work.  If these options are else used together, this is an error.
+
+Dirlist now knows about a couple of options.
+
