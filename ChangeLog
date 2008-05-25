@@ -1,3 +1,7 @@
+2008-05-26  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* cmpanddel.sh (unpf): Output bugfix, src/dst interchanged
+
 2008-05-20  Valentin Hilbig  <tino@firebird.03.softkill.net>
 
 	* dirlist.c (main, dirlist): options -0 and -

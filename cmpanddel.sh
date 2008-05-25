@@ -21,6 +21,9 @@
 # USA
 #
 # $Log$
+# Revision 1.3  2008-05-25 23:56:50  tino
+# Minor output fixes in certain situations
+#
 # Revision 1.2  2007-10-01 16:21:17  tino
 # Made more readable
 #
@@ -196,7 +199,7 @@ fi
 if ! rmdir "$pf"
 then
 	unp
-	echo "$DST/$1 not empty"
+	echo "$pf not empty"
 	return
 fi
 unpf=""
