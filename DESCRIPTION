@@ -2,6 +2,9 @@ Move files by atomic rename instead of copy.
 # $Header$
 #
 # $Log$
+# Revision 1.6  2008-05-28 14:47:56  tino
+# Option -c
+#
 # Revision 1.5  2008-05-07 15:12:17  tino
 # dirlist added
 #
@@ -25,9 +28,15 @@ was insanely done.
 mv shall be an atomic operation.  However you cannot switch mv into
 atomic mode.  This version here does what mv is supposed to do:
 
-It renames the target and fails if it cannot do the rename.  It does
-this using the rename() operation which is atomically (except for NFS,
-but this is an NFS bug).
+It renames the target and fails if it cannot do the rename (but beware
+the common NFS bug in such a situation).  In unsafe mode it does this
+using the rename() operation (note that rename() has a possible race
+condition which may overwrite a destination unconditionally, if it is
+created after mvatom has checked the presence of the destination), in
+safe mode (default, introduced in 0.5.0) it uses hardlink/unlink.  The
+move is "atomically" in respect to the destination either is there
+completely or missing, it is not "atomically" in the sense of "man 2
+rename".  If you need this, you need option -uf.
 
 Another thing is that it only guesses something for the last argument
 like mv does if it is instructed to do so.  So it always works
@@ -37,12 +46,13 @@ beeing a directory or not.
 
 If the destination is a directory this must be given as an option to
 mvatom.  Also all options are simple and clear and there is no way to
-overwrite files, as mvatom never overwrites files.
+overwrite files, as mvatom never overwrites files (but beware the race
+condition in unsafe mode which was used before 0.5.0).
 
 Also you can "move away" files with mvatom, too.  This is done with
 the "backup" feature, where an existing destination can be renamed.
 
-There now is a helper script: <dl> <dt> cmpanddel.sh <dd> deletes
+There now is a helper script: <dl> <dt> cmpanddel.sh </dt><dd> deletes
 everything from a first directory which has an indentical match in a
 second directory.  It shall be safe even against the weirdest
 situations where you simply cannot detect that the first directory in
@@ -50,7 +60,7 @@ fact is the second one, thus accidentally deleting a whole directory
 tree.  The protection is done by renaming the source first with
 mvatom.  It is not race condition free, so it is thought for all those
 lazy experienced sysadmins out there who exactly know what they are
-doing. </dl>
+doing. </dt></dl>
 
 There also now is "dirlist" a little helper to create directory lists.
 This is for mvatom option "-l -"

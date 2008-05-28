@@ -3,9 +3,11 @@
 # Minimal unit tests for mvatom
 #
 # $Log$
+# Revision 1.2  2008-05-28 14:47:56  tino
+# Option -c
+#
 # Revision 1.1  2008-05-21 17:59:55  tino
 # Dist
-#
 
 file	1	A
 run	mvatom -ab A
@@ -92,3 +94,23 @@ RUN	0
 FILE	1	C.~1~
 FILE	2	C.~2~
 FILE	3	C
+
+file	1	A
+file	2	B
+file	3	C
+file	4	D
+dir	E
+# Move B to backup (as E/B) and A renamed to B
+run	mvatom -bc E A B
+RUN	0
+# C moved to B and thus C backupped to E/B.~1~
+run	mvatom -ac E C B
+RUN	0
+# B (former A) moved to D and thus backupped to E/D
+run	mvatom -ac E B D
+RUN	0
+FILE	1	E/D
+FILE	2	E/B
+FILE	3	E/B.~1~
+FILE	4	D
+DIR	E

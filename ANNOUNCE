@@ -1,15 +1,10 @@
-Option -a added, "move away feature" fixed and renamed to option -ab,
-dirlist now has some options
+Option -c added
 
-Option -a has less race conditions than option -b.  However the latest
-moved file then does not keep it's original name if an elder file with
-same name exists.
+<b>WARNING: This version still operates in unsafe mode!<b>
+The description is already updated to upcomming version 0.5.0,
+which fixes a possible race condition (however I am still
+working on this fix).
 
-The "move away feature" had a bug in conjunction with option -s.  This
-bug has been fixed.
-
-The "move away feature" now needs both options -a and -b present to
-work.  If these options are else used together, this is an error.
-
-Dirlist now knows about a couple of options.
-
+With option -c you can define a directory where the backups are
+created instead of the target directory.  It must be on the same
+filesystem as source and destination.

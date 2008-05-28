@@ -1,3 +1,7 @@
+2008-05-28  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* mvatom.c (do_rename_away, main): Option -c
+
 2008-05-26  Valentin Hilbig  <tino@firebird.03.softkill.net>
 
 	* cmpanddel.sh (unpf): Output bugfix, src/dst interchanged

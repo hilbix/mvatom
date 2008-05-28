@@ -20,6 +20,9 @@
  * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.11  2008-05-28 14:47:56  tino
+ * Option -c
+ *
  * Revision 1.10  2008-05-21 17:58:55  tino
  * Option -a
  *
@@ -61,7 +64,8 @@
 
 static int		errflag;
 static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs, m_append;
-static const char	*m_dest, *m_source;
+static int		m_unsafe, m_force;
+static const char	*m_dest, *m_source, *m_backupdir, *m_tmpdir;
 
 
 /**********************************************************************/
@@ -115,7 +119,7 @@ get_src(const char *name)
 static void
 do_mkdirs(const char *path, const char *file)
 {
-  switch (tino_file_mkdirs_forfile(path, file))
+  switch (tino_file_mkdirs_forfileE(path, file))
     {
     case -1:
       tino_err("failed: mkdir for %s%s%s", path ? path : "", path ? "/" : "", file);
@@ -154,11 +158,15 @@ do_rename(const char *name, const char *to)
 static void
 do_rename_away(const char *name, const char *rename)
 {
-  char	*tmp;
+  char	*tmp, *o;
 
-  tmp	= tino_file_backupname(NULL, 0, rename);
+  o	= 0;
+  if (!m_backupdir || !tino_file_notexistsE(rename=tmp=o=tino_file_glue_pathOi(NULL, 0, m_backupdir, tino_file_filenameptr_constO(rename))))
+    tmp	= tino_file_backupnameNi(NULL, 0, rename);
   do_rename(name, tmp);
   tino_freeO(tmp);
+  if (o!=tmp)
+    tino_freeO(o);
 }
 
 static void
@@ -167,12 +175,27 @@ do_rename_backup(const char *old, const char *new)
   const char	*src;
 
   src	= get_src(old);
+
+#if 0
+  XXX DOES NOT WORK XXX;
+  /* Try to move, skips 2 syscalls in the most common situation
+   */
+  if (!rename(src, new))
+    {
+      verbose("rename: %s -> %s", src, new);
+      return;
+    }
+#endif
+
+  /* Try to figure out what happened	*/
+
   if (tino_file_notexistsE(src))
     {
       tino_err("missing old name for rename: %s", src);
       return;
     }
   errno	= 0;	/* Do not report errors in case there is no error	*/
+
   if (!tino_file_notexistsE(new))
     {
       if (m_append)
@@ -230,7 +253,7 @@ do_relative(const char *old, const char *dest)
 {
   if (!m_relative)
     return dest;
-  return tino_file_glue_path(NULL, 0, tino_file_dirname(NULL, 0, old), tino_file_skip_root_const(dest));
+  return tino_file_glue_pathOi(NULL, 0, tino_file_dirnameOi(NULL, 0, old), tino_file_skip_root_constN(dest));
 }
 
 /* leaks memory	*/
@@ -251,12 +274,12 @@ do_mvdest(const char *name)
  
   if (m_relative)
     {
-      targ	= tino_file_skip_root_const(name);
+      targ	= tino_file_skip_root_constN(name);
       do_mkdirs(m_dest, targ);
     }
   else
-    targ	= tino_file_filenameptr_const(name);
-  dest	= tino_file_glue_path(NULL, 0, m_dest, targ);
+    targ	= tino_file_filenameptr_constO(name);
+  dest	= tino_file_glue_pathOi(NULL, 0, m_dest, targ);
   do_rename_backup(name, dest);
   tino_freeO(dest);
 }
@@ -284,7 +307,7 @@ is_directory_target(const char *name)
 {
   const char	*tmp;
 
-  tmp	= tino_file_filenameptr_const(name);
+  tmp	= tino_file_filenameptr_constO(name);
   if (*tmp && strcmp(tmp, ".") && strcmp(tmp, ".."))
     return 0;
   return !tino_file_notdirE(name);
@@ -313,42 +336,55 @@ main(int argc, char **argv)
 		      TINO_GETOPT_FLAG
 		      "0	(This option is 'number zero', not a big O!)\n"
 		      "		read 0 terminated lines from stdin\n"
-		      "		example: find . -print0 | mvatom -0b -"
+		      "		example: find . -type f -print0 | mvatom -0ab -"
 		      , &m_nulls,
 
 		      TINO_GETOPT_FLAG
-		      "a	append .~#~ to source if destination exists.\n"
-		      "		This has less race conditions than option -b\n"
+		      "a	Append .~#~ to source if destination exists\n"
+		      "		This has less race conditions than option -b.\n"
 		      "		Use with option -b to 'move away' a file."
 		      , &m_append,
 
 		      TINO_GETOPT_FLAG
-		      "b	backup existing destination to .~#~\n"
-		      "		Can only be used with option -a to 'move away' files.\n"
+		      "b	Backup existing destination to .~#~\n"
+		      "		Cannot be used with option -a except for 'rename away' feature.\n"
 		      "		On errors this might leave you with a renamed destination!"
 		      , &m_backup,
 
 		      TINO_GETOPT_STRING
-		      "d dir	target directory"
-		      , &m_dest,
+		      "c dir	Create backups in the given directory.\n"
+		      "		This moves an existing destination into the given dir,\n"
+		      "		possibly renaming it according to options -a and -b"
+		      , &m_backupdir,
 
+		      TINO_GETOPT_STRING
+		      "d dir	target (Destination) directory to move files into"
+		      , &m_dest,
+#if 0
 		      TINO_GETOPT_FLAG
-		      "i	ignore (common) errors"
+		      "f	Force overwrite of destination, needs unsafe mode (option -u)\n"
+		      "		This directly calls rename() per move and therefor atomically\n"
+		      "		replaces (overwrites) existing destinations unconditionally.\n"
+		      "		Also this needs only 1 syscall per move.\n"
+		      , &m_force,
+#endif
+		      TINO_GETOPT_FLAG
+		      "i	Ignore (common) errors"
 		      , &m_ignore,
 
 		      TINO_GETOPT_FLAG
-		      "l	read lines from stdin, enables - as argument\n"
+		      "l	read Lines from stdin, enables '-' as argument\n"
 		      "		example: find . -print | mvatom -lb -"
 		      , &m_lines,
 
 		      TINO_GETOPT_FLAG
-		      "o	original behavior if directory is the last target.\n"
+		      "o	Original behavior if directory is the last target\n"
 		      "		The last argument must end in a / or must be . or .."
 		      , &m_original,
 
 		      TINO_GETOPT_FLAG
 		      TINO_GETOPT_MAX
-		      "p	create missing parent directories (for -r)\n"
+		      "p	create missing Parent directories (for -r)\n"
 		      "		Give twice to create for -d, too"
 		      , &m_mkdirs,
 		      2,
@@ -358,17 +394,32 @@ main(int argc, char **argv)
 		      , &m_quiet,
 
 		      TINO_GETOPT_FLAG
-		      "r	append relative source path to dest (needs no -p)\n"
+		      "r	append Relative source path to dest (needs no -p)\n"
 		      "		To rename within a directory without moving use:\n"
 		      "		mvatom -r /path/to/file/a b"
 		      , &m_relative,
 
 		      TINO_GETOPT_STRING
-		      "s src	append the given src prefix, for an usage like:\n"
+		      "s src	append the given Src prefix, for an usage like:\n"
 		      "		( cd whatever; ls -1; ) | mvatom -l -s whatever/ -d todir -\n"
 		      "		The source prefix is not a directory, it's a literal prefix"
 		      , &m_source,
+#if 0
+		      TINO_GETOPT_STRING
+		      "t dir	use the given Temporary working directory for safe mode\n"
+		      "		The directory must be in the same filesystem as source and dest.\n"
+		      "		Without this option such a directory is created.  In unsafe mode\n"
+		      "		this directory is not used, but it still must be present."
+		      , &m_tmpdir,
 
+		      TINO_GETOPT_FLAG
+		      "u	Unsafe mode, needs 2 syscalls instead of 3 by using rename()\n"
+		      "		This mode was previously the default.  It first checks the\n"
+		      "		destination for existence and then uses rename() to move a file.\n"
+		      "		If the destination is created between those two syscalls, this\n"
+		      "		cannot be detected and therefor rename() overwrites (destroys) it."
+		      , &m_unsafe,
+#endif
 		      TINO_GETOPT_FLAG
 		      "v	verbose"
 		      , &m_verbose,
