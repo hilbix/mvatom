@@ -1,10 +1,9 @@
-Option -c added
+dirlist now has options -a -d -l -m -u -o, and accepts more than one directory
 
-<b>WARNING: This version still operates in unsafe mode!<b>
-The description is already updated to upcomming version 0.5.0,
-which fixes a possible race condition (however I am still
-working on this fix).
+With options -a -l -m -u you can set which types of files are output with dirlist.
+However this needs an additional stat() call per file.
 
-With option -c you can define a directory where the backups are
-created instead of the target directory.  It must be on the same
-filesystem as source and destination.
+With option -d you can debug this new feature.
+
+With option -o you can terminate dirlist after the first successful argument.
+The idea is, if you have a list of possibilities, the first one wins.

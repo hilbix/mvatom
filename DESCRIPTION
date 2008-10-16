@@ -1,7 +1,10 @@
-Move files by atomic rename instead of copy.
+Move files by atomic rename instead of copy. (Includes dirlist)
 # $Header$
 #
 # $Log$
+# Revision 1.7  2008-10-16 19:42:50  tino
+# Multiargs and options -a -d -l -m -u -o
+#
 # Revision 1.6  2008-05-28 14:47:56  tino
 # Option -c
 #
