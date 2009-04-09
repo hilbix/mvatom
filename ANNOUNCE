@@ -1,9 +1,1 @@
-dirlist now has options -a -d -l -m -u -o, and accepts more than one directory
-
-With options -a -l -m -u you can set which types of files are output with dirlist.
-However this needs an additional stat() call per file.
-
-With option -d you can debug this new feature.
-
-With option -o you can terminate dirlist after the first successful argument.
-The idea is, if you have a list of possibilities, the first one wins.
+dirlist now has options -r to recurse subdirectories.
