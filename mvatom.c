@@ -2,7 +2,7 @@
  *
  * Atomic file move utility.
  *
- * Copyright (C)2006-2008 Valentin Hilbig <webmaster@scylla-charybdis.com>
+ * Copyright (C)2006-2011 Valentin Hilbig <webmaster@scylla-charybdis.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,6 +20,9 @@
  * 02110-1301 USA.
  *
  * $Log$
+ * Revision 1.12  2011-08-25 12:28:35  tino
+ * for dist
+ *
  * Revision 1.11  2008-05-28 14:47:56  tino
  * Option -c
  *
