@@ -1,7 +1,10 @@
-Move files by atomic rename instead of copy. (Includes dirlist)
+Move files by atomic rename instead of copy.
 # $Header$
 #
 # $Log$
+# Revision 1.8  2011-08-25 12:27:14  tino
+# dirlist removed
+#
 # Revision 1.7  2008-10-16 19:42:50  tino
 # Multiargs and options -a -d -l -m -u -o
 #
@@ -36,8 +39,8 @@ the common NFS bug in such a situation).  In unsafe mode it does this
 using the rename() operation (note that rename() has a possible race
 condition which may overwrite a destination unconditionally, if it is
 created after mvatom has checked the presence of the destination), in
-safe mode (default, introduced in 0.5.0) it uses hardlink/unlink.  The
-move is "atomically" in respect to the destination either is there
+safe mode (will be introduced in 0.5.0) it will use hardlink/unlink.
+The move is "atomically" in respect to the destination either is there
 completely or missing, it is not "atomically" in the sense of "man 2
 rename".  If you need this, you need option -uf.
 
@@ -65,5 +68,5 @@ mvatom.  It is not race condition free, so it is thought for all those
 lazy experienced sysadmins out there who exactly know what they are
 doing. </dt></dl>
 
-There also now is "dirlist" a little helper to create directory lists.
-This is for mvatom option "-l -"
+The helper "dirlist" now is in a separate package.  Example use:
+<pre>dirlist -0p DIRa | mvatom -0dDIRb -</pre>

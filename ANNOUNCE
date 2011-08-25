@@ -1,1 +1,4 @@
-dirlist now has options -r to recurse subdirectories.
+Nothing changed in mvatom, but dirlist now is a separate package.
+
+This can be considered a bugfix, though,
+as previously dirlist -rp . did not work correctly.
