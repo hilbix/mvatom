@@ -1,7 +1,0 @@
-Makefile
-Makefile.md5
-*.d
-?*.cvsignore*
-mvatom
-mvatom_version.h
-dirlist

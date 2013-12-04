@@ -1,0 +1,1 @@
+#define MVATOM_VERSION "0.4.4"
