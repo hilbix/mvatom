@@ -1,7 +1,2 @@
-Nothing changed in mvatom, but dirlist now is a separate package.
-
-This can be considered a bugfix, though,
-as previously 'dirlist -rp .' did not work correctly.
-
-If you wonder where version 0.5.0 is: It is not there for the moment.
-So mvatom still operates in unsafe mode!  Please keep that in mind.
+Announcements are now in the git commit log:
+git log --follow VERSION
