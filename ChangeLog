@@ -1,3 +1,10 @@
+2016-11-30  Valentin Hilbig  <tino@medusa.03.softkill.org>
+
+	* cmpanddel.sh: use "IFS=''" for "read -r" to allow spaces at the
+	end of filenames, too.
+	(cmpsoftlink): LF at the end of softlinks previously were ignored,
+	now 'a' -> 'b' and 'a' -> 'b\n' are considered to be different.
+
 2008-05-28  Valentin Hilbig  <tino@firebird.03.softkill.net>
 
 	* mvatom.c (do_rename_away, main): Option -c
