@@ -171,6 +171,12 @@ do_rename_backup(const char *old, const char *new)
     }
   else if (m_mkdirs)
     do_mkdirs(NULL, new);
+  /* note that there is now no more race in case,
+   * that above exists() check fails becasue there is no file,
+   * but the file shows up until we do the rename,
+   * as a safe rename function is used which fails
+   * in this situation.
+   */
   do_rename(src, new);
 }
 
