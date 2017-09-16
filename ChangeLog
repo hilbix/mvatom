@@ -1,3 +1,5 @@
+This has been retired since version 0.5.0 in favor of "git log".
+
 2016-11-30  Valentin Hilbig  <tino@medusa.03.softkill.org>
 
 	* cmpanddel.sh: use "IFS=''" for "read -r" to allow spaces at the
