@@ -2,59 +2,14 @@
  *
  * Atomic file move utility.
  *
- * Copyright (C)2006-2011 Valentin Hilbig <webmaster@scylla-charybdis.com>
+ * On supported platforms this operation is atomic in the sense, that:
+ * - destination path never does not exist
+ * - it is free of race conditions, even on power outage
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Supported: Linux
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
- *
- * $Log$
- * Revision 1.12  2011-08-25 12:28:35  tino
- * for dist
- *
- * Revision 1.11  2008-05-28 14:47:56  tino
- * Option -c
- *
- * Revision 1.10  2008-05-21 17:58:55  tino
- * Option -a
- *
- * Revision 1.9  2008-05-04 04:28:22  tino
- * Option -s added
- *
- * Revision 1.8  2008-04-26 14:08:31  tino
- * Cosmetic change
- *
- * Revision 1.7  2007-12-13 08:18:31  tino
- * For dist
- *
- * Revision 1.6  2006-10-21 01:59:00  tino
- * Ubuntu fixes (new va_* functions)
- *
- * Revision 1.5  2006/09/27 20:36:40  tino
- * see ANNOUNCE and ChangeLog
- *
- * Revision 1.4  2006/08/12 02:03:35  tino
- * option -o and some minor changes
- *
- * Revision 1.3  2006/07/31 23:01:45  tino
- * Option -p added (mkdir parents for dest)
- *
- * Revision 1.2  2006/07/23 00:06:19  tino
- * Bugs removed, working now
- *
- * Revision 1.1  2006/07/22 23:47:58  tino
- * First version for testing
+ * This Works is placed under the terms of the Copyright Less License,
+ * see file COPYRIGHT.CLL.  USE AT OWN RISK, ABSOLUTELY NO WARRANTY.
  */
 
 #define TINO_NEED_OLD_ERR_FN
