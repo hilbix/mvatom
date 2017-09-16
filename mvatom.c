@@ -67,7 +67,6 @@
 
 static int		errflag;
 static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs, m_append;
-static int		m_unsafe, m_force;
 static const char	*m_dest, *m_source, *m_backupdir, *m_tmpdir;
 
 
@@ -150,7 +149,7 @@ read_dest(void)
 static void
 do_rename(const char *name, const char *to)
 {
-  if (rename(name, to))
+  if (tino_file_renameE(name, to))
     {
       tino_err("cannot rename %s -> %s", name, to);
       return;
@@ -363,14 +362,7 @@ main(int argc, char **argv)
 		      TINO_GETOPT_STRING
 		      "d dir	target (Destination) directory to move files into"
 		      , &m_dest,
-#if 0
-		      TINO_GETOPT_FLAG
-		      "f	Force overwrite of destination, needs unsafe mode (option -u)\n"
-		      "		This directly calls rename() per move and therefor atomically\n"
-		      "		replaces (overwrites) existing destinations unconditionally.\n"
-		      "		Also this needs only 1 syscall per move.\n"
-		      , &m_force,
-#endif
+
 		      TINO_GETOPT_FLAG
 		      "i	Ignore (common) errors"
 		      , &m_ignore,
@@ -414,14 +406,6 @@ main(int argc, char **argv)
 		      "		Without this option such a directory is created.  In unsafe mode\n"
 		      "		this directory is not used, but it still must be present."
 		      , &m_tmpdir,
-
-		      TINO_GETOPT_FLAG
-		      "u	Unsafe mode, needs 2 syscalls instead of 3 by using rename()\n"
-		      "		This mode was previously the default.  It first checks the\n"
-		      "		destination for existence and then uses rename() to move a file.\n"
-		      "		If the destination is created between those two syscalls, this\n"
-		      "		cannot be detected and therefor rename() overwrites (destroys) it."
-		      , &m_unsafe,
 #endif
 		      TINO_GETOPT_FLAG
 		      "v	verbose"
