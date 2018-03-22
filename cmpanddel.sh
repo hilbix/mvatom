@@ -94,7 +94,7 @@ find "$1" -type d -prune -o -type l -printf '%l'
 
 cmpsoftlink()
 {
-show "link" "$1"
+show link "$1"
 
 if [ ! -L "$DST/$1" ]
 then
@@ -124,7 +124,7 @@ unpf=""
 
 cmpfile()
 {
-show "file" "$1"
+show file "$1"
 
 if [ ! -e "$DST/$1" ]
 then
@@ -143,13 +143,121 @@ fi
 
 if ! cmp "$pf" "$DST/$1"
 then
-	echo "$SRC/$1 mismatch."
 	unp
+	echo "$SRC/$1 mismatch."
 	return
 fi
 
 rm -f "$pf"
 unpf=""
+}
+
+cmpsock()
+{
+show sock "$1"
+
+if [ ! -S "$DST/$1" ]
+then
+	if [ -e "$DST/$1" ]
+	then
+		echo "$DST/$1 is no socket!"
+	else
+		echo "$DST/$1 does not exist"
+	fi
+	return
+fi
+
+prot "$SRC/$1"
+
+if [ ! -S "$DST/$1" ]
+then
+	unp
+	echo "$DST/$1 socket vanished!"
+	return
+fi
+
+rm -f "$pf"
+unpf=""
+}
+
+cmpfifo()
+{
+show fifo "$1"
+
+if [ ! -p "$DST/$1" ]
+then
+	if [ -e "$DST/$1" ]
+	then
+		echo "$DST/$1 is no fifo!"
+	else
+		echo "$DST/$1 does not exist"
+	fi
+	return
+fi
+
+prot "$SRC/$1"
+
+if [ ! -p "$DST/$1" ]
+then
+	unp
+	echo "$DST/$1 fifo vanished!"
+	return
+fi
+
+rm -f "$pf"
+unpf=""
+}
+
+getmajorminor()
+{
+stat -c %t,%T "$1"
+}
+
+cmpspecial()
+{
+show "$1" "$4"
+
+if [ ! -$2 "$DST/$4" ]
+then
+	if [ -e "$DST/$4" ]
+	then
+		echo "$DST/$4 is no $3 special!"
+	else
+		echo "$DST/$4 does not exist"
+	fi
+	return
+fi
+
+prot "$SRC/$4"
+
+if [ ! -$2 "$DST/$4" ]
+then
+	unp
+	echo "$DST/$4 $3 special vanished!"
+	return
+fi
+
+b="$(getmajorminor "$pf")"
+c="$(getmajorminor "$DST/$4")"
+if [ ".$b" != ".$c" ]
+then
+	unp
+	echo "$DST/$4: $3 special mismatch ('$c' vs. '$b'): $SRC/$4"
+	return
+fi
+
+rm -f "$pf"
+unpf=""
+}
+
+cmpblock()
+{
+cmpspecial "blk " b block "$1"
+}
+
+cmpchar()
+{
+cmpspecial char c char "$1"
 }
 
 cmpdir()
@@ -194,6 +302,30 @@ find "$SRC" -type l -printf '%P\0' -o -type d -name "$tmpdir" -prune |
 while IFS='' read -rd '' a
 do
 	cmpsoftlink "$a"
+done
+
+find "$SRC" -type s -printf '%P\0' -o -type d -name "$tmpdir" -prune |
+while IFS='' read -rd '' a
+do
+	cmpsock "$a"
+done
+
+find "$SRC" -type p -printf '%P\0' -o -type d -name "$tmpdir" -prune |
+while IFS='' read -rd '' a
+do
+	cmpfifo "$a"
+done
+
+find "$SRC" -type b -printf '%P\0' -o -type d -name "$tmpdir" -prune |
+while IFS='' read -rd '' a
+do
+	cmpblock "$a"
+done
+
+find "$SRC" -type c -printf '%P\0' -o -type d -name "$tmpdir" -prune |
+while IFS='' read -rd '' a
+do
+	cmpchar "$a"
 done
 
 find "$SRC" -depth -type d -name "$tmpdir" -prune -o -type d -printf '%P\0' |
