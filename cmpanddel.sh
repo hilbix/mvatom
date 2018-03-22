@@ -7,11 +7,11 @@
 
 set -e
 
-OOPS()
-{
-echo "$*" >&2
-exit 1
-}
+STDOUT() { local e=$?; printf '%q' "$1"; printf ' %q' "${@:2}"; printf '\n'; return $e; }
+STDERR() { STDOUT "$@" >&2; }
+OOPS() { STDERR OOPS: "$@"; exit 23; }
+x() { "$@"; }
+o() { x "$@" || OOPS fail $?: "$@"; }
 
 maketmpdir()
 {
@@ -67,7 +67,7 @@ prot()
 [ ! -e "$pf" ] || OOPS "internal error: $pf exists"
 
 echo "$1" > "$pl"
-mvatom "$1" "$pf"
+o mvatom "$1" "$pf"
 unpf="$1"
 }
 
@@ -84,12 +84,12 @@ unpf=""
 show()
 {
 x="$(( ${#2}<70 ? 0 : ${#2}-70 ))"
-echo -n "$1 ${2:$x}$el"
+printf '%q %q%s' "$1" "${2:$x}" "$el"
 }
 
 getlink()
 {
-find "$1" -type d -prune -o -type l -printf "%l\n"
+find "$1" -type d -prune -o -type l -printf '%l'
 }
 
 cmpsoftlink()
@@ -109,8 +109,8 @@ fi
 
 prot "$SRC/$1"
 
-b="`getlink "$pf"`x"
-c="`getlink "$DST/$1"`x"
+b="$(getlink "$pf")x"
+c="$(getlink "$DST/$1")x"
 if [ ".$b" != ".$c" ]
 then
 	unp
@@ -184,20 +184,21 @@ usage "$@"
 warn "$1" "$2"
 maketmpdir "$3"
 
-find "$SRC" -type f -printf "%P\n" -o -type d -name "$tmpdir" -prune |
-while IFS='' read -r a
+find "$SRC" -type f -printf '%P\0' -o -type d -name "$tmpdir" -prune |
+while IFS='' read -rd '' a
 do
 	cmpfile "$a"
 done
 
-find "$SRC" -type l -printf "%P\n" -o -type d -name "$tmpdir" -prune |
-while IFS='' read -r a
+find "$SRC" -type l -printf '%P\0' -o -type d -name "$tmpdir" -prune |
+while IFS='' read -rd '' a
 do
 	cmpsoftlink "$a"
 done
 
-find "$SRC" -depth -type d -name "$tmpdir" -prune -o -type d -printf "%P\n" |
-while IFS='' read -r a
+find "$SRC" -depth -type d -name "$tmpdir" -prune -o -type d -printf '%P\0' |
+while IFS='' read -rd '' a
 do
 	[ -z "$a" ] || cmpdir "$a"
 done
+
