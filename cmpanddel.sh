@@ -30,8 +30,9 @@ trap '[ -e "$pf" ] || rm -f "$pl"; rmdir "$tmpdir"' 0
 
 usage()
 {
-[ 2 = $# -o 3 = $# ] ||
-OOPS "Usage: `basename "$0"` directory-to-cleanup directory-to-compare [tmpdirname]"
+[ 2 = $# ] ||
+OOPS "Usage: $(basename "$0") directory-to-cleanup directory-to-compare
+	Temporary directory may be given in env CMPANDDEL_TMP"
 }
 
 warn()
@@ -290,8 +291,8 @@ unpf=""
 }
 
 usage "$@"
-warn "$1" "$2"
-maketmpdir "$3"
+warn "$@"
+maketmpdir "$CMPANDDEL_TMP"
 
 find "$SRC" -type f -printf '%P\0' -o -type d -name "$tmpdir" -prune |
 while IFS='' read -rd '' a
