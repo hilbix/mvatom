@@ -18,9 +18,9 @@ maketmpdir()
 if [ -n "$1" ]
 then
 	tmpdir="$1"
-	[ ! -d "$1" ] && mkdir "$1"
+	[ ! -d "$1" ] && o mkdir "$1"
 else
-	tmpdir="`mktemp -d tmpcmp.XXXXXX`"
+	tmpdir="$(mktemp -d tmpcmp.XXXXXX)"
 fi
 
 pf="$tmpdir/file"
@@ -36,7 +36,7 @@ OOPS "Usage: `basename "$0"` directory-to-cleanup directory-to-compare [tmpdirna
 
 warn()
 {
-el="`tput el || :``tput cr || :`"
+el="$(tput el || :)$(tput cr || :)"
 SRC="$1"
 DST="$2"
 cat <<EOF
@@ -75,7 +75,7 @@ unp()
 {
 [ -n "$unpf" ] || OOPS "internal error: variable not set"
 [ ! -e "$unpf" ] || OOPS "internal error: $unpf exists"
-[ ".$unpf" = ".`cat "$pl"`" ] || OOPS "internal error: $unpf does not match $pl"
+[ ".$unpf." = ".$(cat "$pl"; echo .)" ] || OOPS "internal error: $unpf does not match $pl"
 
 mvatom "$pf" "$unpf"
 unpf=""
@@ -90,6 +90,7 @@ printf '%q %q%s' "$1" "${2:$x}" "$el"
 getlink()
 {
 find "$1" -type d -prune -o -type l -printf '%l'
+echo x	# prevent POSIX bug removing arbitrary number of \n from output
 }
 
 cmpsoftlink()
@@ -109,8 +110,8 @@ fi
 
 prot "$SRC/$1"
 
-b="$(getlink "$pf")x"
-c="$(getlink "$DST/$1")x"
+b="$(getlink "$pf")"
+c="$(getlink "$DST/$1")"
 if [ ".$b" != ".$c" ]
 then
 	unp
