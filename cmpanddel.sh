@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Compare directory with a second and delete files which match.
+# Compare directory with other directories and delete files which match.
 #
 # This Works is placed under the terms of the Copyright Less License,
 # see file COPYRIGHT.CLL.  USE AT OWN RISK, ABSOLUTELY NO WARRANTY.
@@ -30,16 +30,18 @@ trap '[ -e "$pf" ] || rm -f "$pl"; rmdir "$tmpdir"' 0
 
 usage()
 {
-[ 2 = $# ] ||
-OOPS "Usage: $(basename "$0") directory-to-cleanup directory-to-compare
-	Temporary directory may be given in env CMPANDDEL_TMP"
+[ 2 -le $# ] ||
+OOPS "Usage: $(basename "$0") directory-to-cleanup directory-to-compare..
+	Temporary directory may be given in env CMPANDDEL_TMP
+	You can give multiple compare-directories to check for files,
+	the first one with the given target wins."
 }
 
 warn()
 {
 el="$(tput el || :)$(tput cr || :)"
 SRC="$1"
-DST="$2"
+DSTS=("${@:2}")
 cat <<EOF
 
 This script is for lazy experienced sysadmins and comes with mvatom:
@@ -56,13 +58,35 @@ entries, "file" and "location".  Location tells you where file came
 from.  Move it back manually.  (No warranty.  Use at own risk.  etc.)
 
 Deletes  from "$SRC"
-Compares from "$DST"
-
 EOF
+
+for x in "${DSTS[@]}"
+do
+	echo "Compares from \"$x\""
+done
+echo
 echo -n "Press return to continue: "
 read
 }
 
+# Try to find the given file in the DSTS
+: get_dst file
+get_dst()
+{
+local a
+dst=/does-not-exist
+for a in "${DSTS[@]}"
+do
+	dst="$a/$1"
+	[ -e "$dst" ] && return
+done
+:
+}
+
+# Protect a file by moving it into the TMPDIR
+# The idea behind this is, that if you compare source with destination,
+# the source vanishes, such that the destination vanishes, too.
+# This effectively protects against accidents like: cmp x x && rm x
 prot()
 {
 [ ! -e "$pf" ] || OOPS "internal error: $pf exists"
@@ -72,16 +96,21 @@ o mvatom "$1" "$pf"
 unpf="$1"
 }
 
+# Move file back from compare-directory to where it was
 unp()
 {
 [ -n "$unpf" ] || OOPS "internal error: variable not set"
 [ ! -e "$unpf" ] || OOPS "internal error: $unpf exists"
 [ ".$unpf." = ".$(cat "$pl"; echo .)" ] || OOPS "internal error: $unpf does not match $pl"
 
-mvatom "$pf" "$unpf"
+# Do not bail out on error in case something vanished.
+# In that case it might leave debris behind for manual cleanup.
+# This is better than to give up early.  (Gives up in prot())
+x mvatom "$pf" "$unpf"
 unpf=""
 }
 
+# Print progress output
 show()
 {
 x="$(( ${#2}<70 ? 0 : ${#2}-70 ))"
@@ -97,14 +126,15 @@ echo x	# prevent POSIX bug removing arbitrary number of \n from output
 cmpsoftlink()
 {
 show link "$1"
+get_dst "$1"
 
-if [ ! -L "$DST/$1" ]
+if [ ! -L "$dst" ]
 then
-	if [ -e "$DST/$1" ]
+	if [ -e "$dst" ]
 	then
-		echo "$DST/$1 is no soflink!"
+		echo "$dst is no soflink!"
 	else
-		echo "$DST/$1 does not exist"
+		echo "$dst does not exist"
 	fi
 	return
 fi
@@ -112,11 +142,11 @@ fi
 prot "$SRC/$1"
 
 b="$(getlink "$pf")"
-c="$(getlink "$DST/$1")"
+c="$(getlink "$dst")"
 if [ ".$b" != ".$c" ]
 then
 	unp
-	echo "$DST/$1: softlinks mismatch: $SRC/$1"
+	echo "$dst: softlinks mismatch: $SRC/$1"
 	return
 fi
 
@@ -127,23 +157,24 @@ unpf=""
 cmpfile()
 {
 show file "$1"
+get_dst "$1"
 
-if [ ! -e "$DST/$1" ]
+if [ ! -e "$dst" ]
 then
-	echo "$DST/$1 does not exist"
+	echo "$dst does not exist"
 	return
 fi
 
 prot "$SRC/$1"
 
-if [ -L "$DST/$1" -o ! -f "$DST/$1" ]
+if [ -L "$dst" -o ! -f "$dst" ]
 then
 	unp
-	echo "$DST/$1 is no normal file!"
+	echo "$dst is no normal file!"
 	return
 fi
 
-if ! cmp "$pf" "$DST/$1"
+if ! cmp "$pf" "$dst"
 then
 	unp
 	echo "$SRC/$1 mismatch."
@@ -157,24 +188,25 @@ unpf=""
 cmpsock()
 {
 show sock "$1"
+get_dst "$1"
 
-if [ ! -S "$DST/$1" ]
+if [ ! -S "$dst" ]
 then
-	if [ -e "$DST/$1" ]
+	if [ -e "$dst" ]
 	then
-		echo "$DST/$1 is no socket!"
+		echo "$dst is no socket!"
 	else
-		echo "$DST/$1 does not exist"
+		echo "$dst does not exist"
 	fi
 	return
 fi
 
 prot "$SRC/$1"
 
-if [ ! -S "$DST/$1" ]
+if [ ! -S "$dst" ]
 then
 	unp
-	echo "$DST/$1 socket vanished!"
+	echo "$dst socket vanished!"
 	return
 fi
 
@@ -185,24 +217,25 @@ unpf=""
 cmpfifo()
 {
 show fifo "$1"
+get_dst "$1"
 
-if [ ! -p "$DST/$1" ]
+if [ ! -p "$dst" ]
 then
-	if [ -e "$DST/$1" ]
+	if [ -e "$dst" ]
 	then
-		echo "$DST/$1 is no fifo!"
+		echo "$dst is no fifo!"
 	else
-		echo "$DST/$1 does not exist"
+		echo "$dst does not exist"
 	fi
 	return
 fi
 
 prot "$SRC/$1"
 
-if [ ! -p "$DST/$1" ]
+if [ ! -p "$dst" ]
 then
 	unp
-	echo "$DST/$1 fifo vanished!"
+	echo "$dst fifo vanished!"
 	return
 fi
 
@@ -218,33 +251,34 @@ stat -c %t,%T "$1"
 cmpspecial()
 {
 show "$1" "$4"
+get_dst "$4"
 
-if [ ! -$2 "$DST/$4" ]
+if [ ! -$2 "$dst" ]
 then
-	if [ -e "$DST/$4" ]
+	if [ -e "$dst" ]
 	then
-		echo "$DST/$4 is no $3 special!"
+		echo "$dst is no $3 special!"
 	else
-		echo "$DST/$4 does not exist"
+		echo "$dst does not exist"
 	fi
 	return
 fi
 
 prot "$SRC/$4"
 
-if [ ! -$2 "$DST/$4" ]
+if [ ! -$2 "$dst" ]
 then
 	unp
-	echo "$DST/$4 $3 special vanished!"
+	echo "$dst $3 special vanished!"
 	return
 fi
 
 b="$(getmajorminor "$pf")"
-c="$(getmajorminor "$DST/$4")"
+c="$(getmajorminor "$dst")"
 if [ ".$b" != ".$c" ]
 then
 	unp
-	echo "$DST/$4: $3 special mismatch ('$c' vs. '$b'): $SRC/$4"
+	echo "$dst: $3 special mismatch ('$c' vs. '$b'): $SRC/$4"
 	return
 fi
 
@@ -265,19 +299,20 @@ cmpspecial char c char "$1"
 cmpdir()
 {
 show "dir " "$1"
+get_dst "$1"
 
-if [ ! -e "$DST/$1" ]
+if [ ! -e "$dst" ]
 then
-	echo "$DST/$1 does not exist"
+	echo "$dst does not exist"
 	return
 fi
 
 prot "$SRC/$1"
 
-if [ -L "$DST/$1" -o ! -d "$DST/$1" ]
+if [ -L "$dst" -o ! -d "$dst" ]
 then
 	unp
-	echo "$DST/$1 is no directory!"
+	echo "$dst is no directory!"
 	return
 fi
 
