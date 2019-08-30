@@ -1,0 +1,10 @@
+container:
+  image: gcc:latest
+
+make_task:
+  git_script: git submodule update --init
+  compile_script: make
+  install_script: make install
+  md5chk_script: git clone --recursive https://github.com/hilbix/md5chk.git && cd md5chk && make && make install
+  test_script: make test
+
