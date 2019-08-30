@@ -91,7 +91,7 @@ prot()
 {
 [ ! -e "$pf" ] || OOPS "internal error: $pf exists"
 
-echo "$1" > "$pl"
+echo -n "$1" > "$pl"
 o mvatom "$1" "$pf"
 unpf="$1"
 }
@@ -101,7 +101,7 @@ unp()
 {
 [ -n "$unpf" ] || OOPS "internal error: variable not set"
 [ ! -e "$unpf" ] || OOPS "internal error: $unpf exists"
-[ ".$unpf." = ".$(cat "$pl"; echo .)" ] || OOPS "internal error: $unpf does not match $pl"
+[ ".$unpf." = ".$(cat "$pl"; echo .)" ] || OOPS internal error: "$unpf" does not match "$pl"
 
 # Do not bail out on error in case something vanished.
 # In that case it might leave debris behind for manual cleanup.
