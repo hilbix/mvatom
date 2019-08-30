@@ -10,6 +10,7 @@ set -e
 STDOUT() { local e=$?; printf '%q' "$1"; printf ' %q' "${@:2}"; printf '\n'; return $e; }
 STDERR() { STDOUT "$@" >&2; }
 OOPS() { STDERR OOPS: "$@"; exit 23; }
+INTERNAL() { OOPS internal error: "$@"; }
 x() { "$@"; }
 o() { x "$@" || OOPS fail $?: "$@"; }
 
@@ -30,11 +31,14 @@ trap '[ -e "$pf" ] || rm -f "$pl"; rmdir "$tmpdir"' 0
 
 usage()
 {
-[ 2 -le $# ] ||
-OOPS "Usage: $(basename "$0") directory-to-cleanup directory-to-compare..
+[ 2 -le $# ] && return
+cat <<EOF
+Usage: "$(basename "$0")" directory-to-cleanup directory-to-compare..
 	Temporary directory may be given in env CMPANDDEL_TMP
 	You can give multiple compare-directories to check for files,
-	the first one with the given target wins."
+	the first one with the given target wins.
+EOF
+exit 42
 }
 
 warn()
@@ -89,7 +93,7 @@ done
 # This effectively protects against accidents like: cmp x x && rm x
 prot()
 {
-[ ! -e "$pf" ] || OOPS "internal error: $pf exists"
+[ ! -e "$pf" ] || INTERNAL "$pf" exists
 
 echo -n "$1" > "$pl"
 o mvatom "$1" "$pf"
@@ -99,9 +103,9 @@ unpf="$1"
 # Move file back from compare-directory to where it was
 unp()
 {
-[ -n "$unpf" ] || OOPS "internal error: variable not set"
-[ ! -e "$unpf" ] || OOPS "internal error: $unpf exists"
-[ ".$unpf." = ".$(cat "$pl"; echo .)" ] || OOPS internal error: "$unpf" does not match "$pl"
+[ -n "$unpf" ] || INTERNAL variable not set
+[ ! -e "$unpf" ] || INTERNAL "$unpf" exists
+[ ".$unpf." = ".$(cat "$pl"; echo .)" ] || INTERNAL "$unpf" does not match "$pl"
 
 # Do not bail out on error in case something vanished.
 # In that case it might leave debris behind for manual cleanup.
