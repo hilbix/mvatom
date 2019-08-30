@@ -67,8 +67,11 @@
 
 static int		errflag;
 static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs, m_append;
+static const char	*m_dest, *m_source, *m_backupdir;
+#if 0
 static int		m_unsafe, m_force;
 static const char	*m_dest, *m_source, *m_backupdir, *m_tmpdir;
+#endif
 
 
 /**********************************************************************/
@@ -144,7 +147,7 @@ read_dest(void)
       tino_err("missing option -l or -0 to read stdin");
       return 0;
     }
-  return tino_buf_line_read(&buf, 0, (m_nulls ? 0 : '\n'));
+  return tino_buf_line_readE(&buf, 0, (m_nulls ? 0 : '\n'));
 }
 
 static void
