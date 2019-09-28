@@ -1,32 +1,78 @@
-$Header$
+# move files atomically
 
-move files atomicly.
+Move files by atomic rename, so never move across filesystems.
 
-Compile:
+It also tries to never overwrite or harm existing data.
+
+> This here does not call `rename()` to atomically replace the destination
+> yet.  This might be added in future.
+
+
+## Usage
+
+	git clone https://github.com/hilbix/mvatom.git
+	cd mvatom
 	make
+	sudo make install
 
-Usage:
-	mvatom [options] oldname newname
-	mvatom [options] -d directory name...
-	mvatom [options] -b name
 
-About:
-	See DESCRIPTION
+## Rationale
 
-Note:
-	dirlist now is a separate package
+> This is an old text which probably needs a rewrite.
 
--Tino
-webmaster@scylla-charybdis.com
-http://www.scylla-charybdis.com/tool.php
+Post-modern mv implementations re-invented a wheel which is no more
+round.  If they cannot move they do a copy/unlink() operation which is
+unsatisfying, as when the unlink() fails you stay with the copy which
+was insanely done.
 
-$Log$
-Revision 1.3  2011-07-23 12:41:10  tino
-dirlist removed
+mv shall be an atomic operation.  However you cannot switch mv into
+atomic mode.  This version here does what mv is supposed to do:
 
-Revision 1.2  2008-05-07 15:12:17  tino
-dirlist added
+It renames the target and fails if it cannot do the rename (but beware
+the common NFS bug in such a situation).  In unsafe mode it does this
+using the rename() operation (note that rename() has a possible race
+condition which may overwrite a destination unconditionally, if it is
+created after mvatom has checked the presence of the destination), in
+safe mode (will be introduced in 0.5.0) it will use hardlink/unlink.
+The move is "atomically" in respect to the destination either is there
+completely or missing, it is not "atomically" in the sense of "man 2
+rename".  If you need this, you need option -uf.
 
-Revision 1.1  2006-07-22 23:47:58  tino
-First version for testing
+Another thing is that it only guesses something for the last argument
+like mv does if it is instructed to do so.  So it always works
+reliably.  You know what it does from looking at the command line, and
+if no heuristics are given this does not depend from the last arg
+beeing a directory or not.
+
+If the destination is a directory this must be given as an option to
+mvatom.  Also all options are simple and clear and there is no way to
+overwrite files, as mvatom never overwrites files (but beware the race
+condition in unsafe mode which was used before 0.5.0).
+
+Also you can "move away" files with mvatom, too.  This is done with
+the "backup" feature, where an existing destination can be renamed.
+
+There now is a helper script: `cmpanddel.sh` deletes
+everything from a first directory which has an indentical match in a
+second directory.  It shall be safe even against the weirdest
+situations where you simply cannot detect that the first directory in
+fact is the second one, thus accidentally deleting a whole directory
+tree.  The protection is done by renaming the source first with
+mvatom.  It is not race condition free, so it is thought for all those
+lazy experienced sysadmins out there who exactly know what they are
+doing.
+
+The helper [`dirlist`](https://github.com/hilbix/dirlist/) now is in a separate package.
+Example use:
+
+	dirlist -0p DIRa | mvatom -0dDIRb -
+
+
+## FAQ
+
+License?
+
+- The Licence currently is GPLv2.
+- I want to change that into [CLL](COPYRIGHT.CLL),
+  but did not yet came around to do the neccessary review.
 
