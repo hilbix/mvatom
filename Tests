@@ -1,13 +1,4 @@
-# $Header$
-#
 # Minimal unit tests for mvatom
-#
-# $Log$
-# Revision 1.2  2008-05-28 14:47:56  tino
-# Option -c
-#
-# Revision 1.1  2008-05-21 17:59:55  tino
-# Dist
 
 file	1	A
 run	mvatom -ab A
@@ -114,3 +105,4 @@ FILE	2	E/B
 FILE	3	E/B.~1~
 FILE	4	D
 DIR	E
+
