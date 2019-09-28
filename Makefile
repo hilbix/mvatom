@@ -1,11 +1,11 @@
 # Makefile automatically generated, do not edit!
 # This output (only this Makefile) is Public Domain.
 #
-#@MD5TINOIGN@ Creation date: Tue Aug 29 10:33:16 DST 2017
+#@MD5TINOIGN@ Creation date: Sat Sep 28 11:47:37 CEST 2019
 #
 # This file is based on following files:
 #@MD5TINOIGN@ 1: Makefile.tino
-#@MD5TINOIGN@ 2: /home/tino/src/mvatom/tino/Makefile.proto
+#@MD5TINOIGN@ 2: tino/Makefile.proto
 
 #
 #@MD5TINOIGN@ included: Makefile.tino
@@ -34,7 +34,7 @@ ADD_LDFLAGS=
 INSTALLPATH=/usr/local
 
 #
-#@MD5TINOIGN@ included: /home/tino/src/mvatom/tino/Makefile.proto
+#@MD5TINOIGN@ included: tino/Makefile.proto
 #
 
 # Automatically generated from "PROGS" above
@@ -72,6 +72,7 @@ VERSIONNAME=$(VERSIONFILE)
 
        GAWK=awk
       TOUCH=touch
+      MKDIR=mkdir
 
          CP=cp
       STRIP=strip
@@ -108,7 +109,7 @@ Makefile:	Makefile.md5
 	$(TOUCH) Makefile
 
 Makefile.md5:	$(VERSIONFILE).$(VERSIONEXT) always
-	@$(GAWK) -vHERE="$(HERE)" -vMAKE="$(MAKE)" -vTINOCOPY="$(TINOCOPY)" 'BEGIN { \
+	@[ -z '$(HERE)' ] || $(GAWK) -vHERE="$(HERE)" -vMAKE="$(MAKE)" -vTINOCOPY="$(TINOCOPY)" 'BEGIN { \
 	if ((getline < "tino/Makefile")>0 && \
 	    (getline < "tino/Makefile.proto")>0 && \
 	    (getline < "tino/Makefile.awk")>-1) \
@@ -128,6 +129,7 @@ $(VERSIONFILE).py:	VERSION
 
 install::
 	$(RM) "$(INSTALLPATH)/bin/$(PROG1)"
+	$(MKDIR) -pm755 "$(INSTALLPATH)/bin"
 	$(CP) "$(PROG1)" "$(INSTALLPATH)/bin/$(PROG1)"
 	$(STRIP) "$(INSTALLPATH)/bin/$(PROG1)"
 	$(RM) "$(INSTALLPATH)/$(BINPATH)/cmpanddel.sh"
@@ -173,7 +175,7 @@ $(PROG1):	$(PROG1).o $(OBJS) $(LIBS)
 $(PROG1).o:  mvatom.c tino/filetool.h tino/file.h tino/sysfix.h \
  tino/sysfix_cygwin.h tino/sysfix_diet.h tino/sysfix_linux.h \
  tino/sysfix_osx.h tino/type.h tino/fatal.h tino/ex.h tino/arg.h \
- tino/alloc.h tino/err.h tino/debug.h tino/str.h tino/ex.h tino/getopt.h \
+ tino/alloc.h tino/debug.h tino/err.h tino/str.h tino/ex.h tino/getopt.h \
  tino/buf_line.h tino/buf.h tino/codec.h mvatom_version.h
 
 # end
