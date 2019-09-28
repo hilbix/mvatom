@@ -1,3 +1,9 @@
-Move files by atomic rename instead of copy.
+Move files by atomic rename instead of copy (like /bin/mv does).
 
-A variant of "mv" which uses `rename()`
+/bin/mv might copy files across filesystems, which is not an atomic
+operation.  This here only uses atomic variant.
+
+Also it tries to avoid to overwrite things,
+provides convenient features like
+"rename away existing destinations"
+or shell pipe support to move a mass of files.
