@@ -4,6 +4,7 @@ container:
 make_task:
   prep_script: git submodule update --init --recursive
   compile_script: make
+  helper_script: which md5chk || { git clone --recursive https://github.com/hilbix/md5chk.git /tmp/md5chk && cd /tmp/md5chk && git checkout 3cfc8ae55f017688e2aef6ca7582934ab858d47d && make all install; }
   test_script: make test
   install_script: make install
 
