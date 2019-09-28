@@ -1,23 +1,27 @@
 [![mvatom Build Status](https://api.cirrus-ci.com/github/hilbix/mvatom.svg?branch=master)](https://cirrus-ci.com/github/hilbix/mvatom/master)
 
-# mvatom
+# `mvatom`
 
-Move files by atomic rename only.
+Move files by atomic rename only, so never move across filesystems.
 
-## Compile
+It also tries to never overwrite or harm existing data.
+
+> This here does not support to atomically replace the destination
+> using `rename()` yet.  This might be added in future.
+
+
+## Usage
 
 	git clone https://github.com/hilbix/mvatom.git
 	cd mvatom
 	git submodule update --init
 	make
+	sudo make install
 
-# Usage
 
-	mvatom [options] oldname newname
-	mvatom [options] -d directory name...
-	mvatom [options] -b name
+## About
 
-# About
+> This is an old text which probably needs a rewrite.
 
 Post-modern `mv` implementations re-invented a wheel which is no more
 round.  If they cannot move they do a copy/`unlink()` operation which is
@@ -27,7 +31,7 @@ was insanely done.
 - `mv` shall be an atomic operation.  However you cannot switch `mv` into
 atomic mode.  This version here does what `mv` is supposed to do:
 
-- It renames the target and fails if it cannot do the rename() (but beware
+- It renames the target and fails if it cannot do the `rename()` (but beware
 the common NFS bug in such a situation).  In unsafe mode it does this
 using the `rename()` operation (note that `rename()` has a possible race
 condition which may overwrite a destination unconditionally, if it is
@@ -62,14 +66,21 @@ source first with `mvatom`.  It is not entirely race condition free,
 so it is thought for all those lazy experienced sysadmins out there who
 exactly know what they are doing.
 
-- The helper `dirlist` now is in a separate package.  Example use:
-
-	dirlist -0p DIRa | mvatom -0dDIRb -
-
 
 # Historic
 
 - [dirlist](https://github.com/hilbix/dirlist) now is a separate package.
   It usually is a bit faster than `find`, because normally it can skip
-  the `stat()` call (which might take ages on bigger dirs).
+  the `stat()` call (which might take ages on bigger dirs).  Example use:
+
+	dirlist -0p DIRa | mvatom -0dDIRb -
+
+
+## FAQ
+
+License?
+
+- The Licence currently is GPLv2.
+- I want to change that into [CLL](COPYRIGHT.CLL),
+  but did not yet came around to do the neccessary review.
 
