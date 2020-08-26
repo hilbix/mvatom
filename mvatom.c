@@ -90,12 +90,23 @@ do_mkdirs(const char *path, const char *file)
   switch (tino_file_mkdirs_forfileE(path, file))
     {
     case -1:
-      tino_err("failed: mkdir for %s%s%s", path ? path : "", path ? "/" : "", file);
-      break;
+      /* a single retry in case somebody else had made the directory first	*/
+      switch (tino_file_mkdirs_forfileE(path, file))
+        {
+        default:
+          return;
 
+        case -1:
+          tino_err("failed: mkdir for %s%s%s", path ? path : "", path ? "/" : "", file);
+          return;
+
+        case 1:
+          break;
+        }
+      /* fallthrough	*/
     case 1:
       verbose("mkdir for %s%s%s", path ? path : "", path ? "/" : "", file);
-      break;
+      return;
     }
 }
 
