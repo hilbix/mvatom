@@ -27,8 +27,17 @@
 
 #include "mvatom_version.h"
 
+#define	WHITEOUT_BY_DEFAULT	0	/* or rather set to 1?	*/
+
+#define	JOIN_(X,Y)	X##Y
+#define	JOIN(X,Y)	JOIN_(X,Y)
+#define	WHITEOUT_BY_DEFAULT_GET	JOIN(WHITEOUT_BY_DEFAULT_, WHITEOUT_BY_DEFAULT)
+#define	WHITEOUT_BY_DEFAULT_0	m_whiteout > 0
+#define	WHITEOUT_BY_DEFAULT_1	m_whiteout >= 0
+
 static int		errflag;
 static int		m_backup, m_ignore, m_nulls, m_lines, m_relative, m_quiet, m_verbose, m_mkdirs, m_append;
+static int		m_enforce, m_whiteout;
 static const char	*m_dest, *m_source, *m_backupdir;
 #if 0
 static int		m_unsafe, m_force;
@@ -163,21 +172,33 @@ rename_noclobber(const char *name, const char *to)
    * Well, this also shows another missing link:  Opening a file for reference only, so neither read nor write.
    *
    * Note for Linux:  You probably can hardlink /proc/fd/HANDLE to the given destination,
-   * so materializing a file descriptor is presend there (even that this is weird).
+   * so materializing a file descriptor is present there (even that this is weird).
    */
-  return renameat2(AT_FDCWD, name, AT_FDCWD, to, RENAME_NOREPLACE);
+  return renameat2(AT_FDCWD, name, AT_FDCWD, to, RENAME_NOREPLACE|(WHITEOUT_BY_DEFAULT_GET ? RENAME_WHITEOUT : 0));
 }
 
 static int
 do_rename(const char *name, const char *to)
 {
-  if (rename_noclobber(name, to))
+  if (!rename_noclobber(name, to))
     {
-      tino_err("cannot rename %s -> %s", name, to);
-      return 1;
+      verbose("rename: %s -> %s", name, to);
+      return 0;
     }
-  verbose("rename: %s -> %s", name, to);
-  return 0;
+  if (errno==EINVAL && !m_enforce && m_whiteout<=0)
+    {
+      /* EINVAL tells us, that RENAME_NOREPLACE is not available on this filesystem
+       *
+       * Fallback to normal rename() in case we are allowed to
+       */
+      if (!rename(name, to))
+        {
+          verbose("unsafe rename: %s -> %s", name, to);
+          return 0;
+        }
+    }
+  tino_err("cannot rename %s -> %s", name, to);
+  return 1;
 }
 
 /* rename away *name, that is
@@ -371,12 +392,15 @@ main(int argc, char **argv)
 
   argn	= tino_getopt(argc, argv, 1, 0,
                       TINO_GETOPT_VERSION(MVATOM_VERSION)
-                      " name...\n"
-                      "	if name is - lines are read from stdin.\n"
-                      "	rename:		%s -r oldname newname\n"
-                      "	move:		%s -d dir name...\n"
-                      "	rename away:	%s -ab name\n"
-                      "	convenience:	alias mv='mvatom -o'",
+                      " name..."
+                      "\n	if name is - lines are read from stdin."
+                      "\n	rename:		%s -r oldname newname"
+                      "\n	move:		%s -d dir name..."
+                      "\n	rename away:	%s -ab name"
+                      "\n	convenience:	alias mv='mvatom -o'"
+                      "\n	This is atomic in the sense that it stays on one FS only."
+                      "\n	This is not yet atomic in the sense of rename()."
+                      ,
 
                       TINO_GETOPT_USAGE
                       "h	this help"
@@ -409,6 +433,11 @@ main(int argc, char **argv)
                       TINO_GETOPT_STRING
                       "d dir	target (Destination) directory to move files into"
                       , &m_dest,
+
+                      TINO_GETOPT_FLAG
+                      "e	Enforce safe mode\n"
+                      "		Fails on filesystems not supporting renameat2(.., RENAME_NOREPLACE)"
+                      , &m_enforce,
 #if 0
                       TINO_GETOPT_FLAG
                       "f	Force overwrite of destination, needs unsafe mode (option -u)\n"
@@ -425,7 +454,13 @@ main(int argc, char **argv)
                       "l	read Lines from stdin, enables '-' as argument\n"
                       "		example: find . -print | mvatom -lb -"
                       , &m_lines,
-
+#if WHITEOUT_BY_DEFAULT
+                      TINO_GETOPT_FLAG
+                      TINO_GETOPT_MIN
+                      "n	no whiteout, opposite of option -w"
+                      , &m_whiteout,
+                      -1,
+#endif
                       TINO_GETOPT_FLAG
                       "o	Original behavior if directory is the last target\n"
                       "		The last argument must end in a / or must be . or .."
@@ -473,8 +508,16 @@ main(int argc, char **argv)
                       "v	verbose"
                       , &m_verbose,
 
+                      TINO_GETOPT_FLAG
+                      TINO_GETOPT_MIN
+                      "w	use whiteout, see renameat2(.., RENAME_WHITEOUT)\n"
+                      "		implies option -e.  (Currently not yet the default.)"
+                      , &m_whiteout,
+                      1,
+
                       NULL);
 
+printf("%d\n", m_whiteout);
   if (argn<=0)
     return 1;
 
@@ -498,3 +541,49 @@ main(int argc, char **argv)
     tino_err("Option -d not present: Rename needs 2 arguments; For 'move away' now use options -ab");
   return errflag;
 }
+
+/* How to implement safe atomic mode: (Future plan)
+ *
+ * Prerequisites:
+ * - source exists, destination exists
+ * - neither source nor destination must be overwritten
+ * - no race conditions make files disappear
+ * Following solution fails:
+ * - hardlink source to backup
+ * - exchange backup and destination
+ * - safely remove source - there is no such thing
+ * Following solution tries to fix that but fails, too:
+ * - safely rename source to backup
+ * - safely exchange backup and destination
+ * Reasons:
+ * - If exchange fails, how to safely move back source?
+ * - In case of a brownout the source is gone (it is on backup, but who knows this!?!)
+ *
+ * Hence we need following algorithm:
+ * - create temp subdirectory at source -- fail if this fails
+ * - hardlink destination to backup -- destination now is kept safe, multiple backups are no problem
+ * - safely rename source into temp -- this assumes no other uses this subdir
+ * - exchange source (in temp) with destination
+ * - fail if dest in temp (named after source) is not the same as the hardlinked dest
+ * - remove dest in temp -- assumes no other process operates on subdir, so this is safe
+ * - rmdir temp
+ *
+ * If "exchange" fails:
+ * - safely rename source back from temp and rmdir temp
+ * - If this fails, too:  Leave the directory as-is, if it is properly named we understand what happened
+ * - As source in temp can be named the same as source on directory up, everything is selfdocumenting
+ * If "safely rename source" fails:
+ * - Either we have a FS not supporting renameat2() flags -- see below
+ * - Or we have another problem - just bail out
+ * Now what to do if renameat2() is not supported?
+ * - remove temp directory -- fail if this fails
+ * - fail if -e present
+ * - rename() source to destination
+ *
+ * Unsafe mode:
+ * - hardlink dest to backup
+ * - rename() source to dest
+ * Unsafe forced mode:
+ * - rename() source to dest
+ */
+
