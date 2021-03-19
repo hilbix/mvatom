@@ -517,7 +517,6 @@ main(int argc, char **argv)
 
                       NULL);
 
-printf("%d\n", m_whiteout);
   if (argn<=0)
     return 1;
 
