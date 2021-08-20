@@ -1,22 +1,13 @@
 /*
  * Atomic file move utility.
  *
- * Copyright (C)2006-2011 Valentin Hilbig <webmaster@scylla-charybdis.com>
+ * This Works is placed under the terms of the Copyright Less License,
+ * see file COPYRIGHT.CLL.  USE AT OWN RISK, ABSOLUTELY NO WARRANTY.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Read: Free as free beer, free speech and free baby.
+ * Ever saw a Copyright on a baby?
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Note: this still uses library parts in tino/ which are not CLLed yet!
  */
 
 #define TINO_NEED_OLD_ERR_FN
@@ -167,7 +158,7 @@ rename_noclobber(const char *name, const char *to)
    * - close Dest
    *
    * Why open for read must suffice?  Due to SeLinux.
-   * It may be that I am allowed to hardlink, rename and read the file, but writing is forbiden.
+   * It may be that I am allowed to hardlink, rename and read the file, but writing is forbidden.
    *
    * Well, this also shows another missing link:  Opening a file for reference only, so neither read nor write.
    *
@@ -562,16 +553,18 @@ main(int argc, char **argv)
  * - create temp subdirectory at source -- fail if this fails
  * - hardlink destination to backup -- destination now is kept safe, multiple backups are no problem
  * - safely rename source into temp -- this assumes no other uses this subdir
- * - exchange source (in temp) with destination
- * - fail if dest in temp (named after source) is not the same as the hardlinked dest
+ * - exchange source (in temp) with destination (renameat2(.., RENAME_EXCHANGE))
+ * - if dest in temp (named after source) is not the same as the hardlinked dest, create an additional backup for it?  Or fail?
  * - remove dest in temp -- assumes no other process operates on subdir, so this is safe
  * - rmdir temp
  *
  * If "exchange" fails:
- * - safely rename source back from temp and rmdir temp
- * - If this fails, too:  Leave the directory as-is, if it is properly named we understand what happened
+ * - hardlink source back from temp
+ * - remove source in temp -- this should be safe
+ * - rmdir temp
+ * - If any step fails:  Leave the directory as-is, if it is properly named we understand what happened
  * - As source in temp can be named the same as source on directory up, everything is selfdocumenting
- * If "safely rename source" fails:
+ * If "safely rename source into temp" fails:
  * - Either we have a FS not supporting renameat2() flags -- see below
  * - Or we have another problem - just bail out
  * Now what to do if renameat2() is not supported?
@@ -584,5 +577,11 @@ main(int argc, char **argv)
  * - rename() source to dest
  * Unsafe forced mode:
  * - rename() source to dest
+ *
+ * Another idea:
+ * - Create backup as a directory -- this always should be atomic or fail
+ *   - Question: What happens if someone operates on the directory directly with something like rename()?  Does this work?
+ * - rename() source into the backup dir
+ * - rename2(.., RENAME_EXCHANGE) source (the rename()d one) and dest
  */
 
