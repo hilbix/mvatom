@@ -7,3 +7,5 @@ Also it tries to avoid to overwrite things,
 provides convenient features like
 "rename away existing destinations"
 or shell pipe support to move a mass of files.
+
+rename2 is an interface to Linux specific renameat2() syscall.
