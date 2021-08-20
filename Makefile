@@ -1,7 +1,7 @@
 # Makefile automatically generated, do not edit!
 # This output (only this Makefile) is Public Domain.
 #
-#@MD5TINOIGN@ Creation date: Fri Aug 30 10:37:04 CEST 2019
+#@MD5TINOIGN@ Creation date: Fri Aug 20 09:21:06 CEST 2021
 #
 # This file is based on following files:
 #@MD5TINOIGN@ 1: Makefile.tino
@@ -11,7 +11,7 @@
 #@MD5TINOIGN@ included: Makefile.tino
 #
 
-      PROGS=mvatom
+      PROGS=mvatom rename2
        OBJS=
 
  INSTALLBIN=cmpanddel.sh
@@ -39,6 +39,7 @@ INSTALLPATH=/usr/local
 
 # Automatically generated from "PROGS" above
       PROG1=mvatom
+      PROG2=rename2
 
 # Override those in Makefile.tino if needed:
  STD_CFLAGS=-g -Wall -Wno-unused-function -O3 -Wno-error=unused-value -Wno-error=unused-function
@@ -83,6 +84,7 @@ VERSIONNAME=$(VERSIONFILE)
 
   PROGS_EXE=			\
 		$(PROG1).exe	\
+		$(PROG2).exe	\
 
 .PHONY: all static install it clean distclean dist tar diff always
 
@@ -132,6 +134,10 @@ install::
 	$(MKDIR) -pm755 "$(INSTALLPATH)/bin"
 	$(CP) "$(PROG1)" "$(INSTALLPATH)/bin/$(PROG1)"
 	$(STRIP) "$(INSTALLPATH)/bin/$(PROG1)"
+	$(RM) "$(INSTALLPATH)/bin/$(PROG2)"
+	$(MKDIR) -pm755 "$(INSTALLPATH)/bin"
+	$(CP) "$(PROG2)" "$(INSTALLPATH)/bin/$(PROG2)"
+	$(STRIP) "$(INSTALLPATH)/bin/$(PROG2)"
 	$(RM) "$(INSTALLPATH)/$(BINPATH)/cmpanddel.sh"
 	$(CP) "cmpanddel.sh" "$(INSTALLPATH)/$(BINPATH)/cmpanddel.sh"
 
@@ -168,6 +174,8 @@ diff::
 # automatically generated dependencies
 $(PROG1).o:	$(COMMON)
 $(PROG1):	$(PROG1).o $(OBJS) $(LIBS)
+$(PROG2).o:	$(COMMON)
+$(PROG2):	$(PROG2).o $(OBJS) $(LIBS)
 
 # compiler generated dependencies, remove if incorrect
 
@@ -177,5 +185,9 @@ $(PROG1).o:  mvatom.c tino/filetool.h tino/file.h tino/sysfix.h \
  tino/sysfix_osx.h tino/type.h tino/fatal.h tino/ex.h tino/arg.h \
  tino/alloc.h tino/debug.h tino/err.h tino/str.h tino/ex.h tino/getopt.h \
  tino/buf_line.h tino/buf.h tino/codec.h mvatom_version.h
+
+
+# included: rename2.d
+$(PROG2).o:  rename2.c
 
 # end
