@@ -18,6 +18,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include "mvatom_version.h"	/* Makfile sadly does not create version file for all (yet)	*/
+
 void
 OOPS(int c, ...)
 {
@@ -40,13 +42,13 @@ main(int argc, char **argv)
   switch (argc==4 && argv[1][0] && argv[1][1] && !argv[1][2] ? argv[1][1] : 0)
     {
     default:
-      OOPS(42, "Usage: ", argv[0], " src dest\n\tthis uses renameat2(.., MODE) with\n"
+      OOPS(42, "Usage: ", argv[0], " src dest\n\tVERSION " MVATOM_VERSION " This uses renameat2(.., MODE) with\n"
 	"\t-f\tforce: unconditionally overwrite destination\n"
 	"\t-n\tRENAME_NOREPLACE: does not override destination\n"
 	"\t-r\tremove source on union-FS: -f with RENAME_WHITEOUT\n"
 	"\t-w\tRENAME_NOREPLACE+RENAME_WHITEOUT\n"
 	"\t-x\tRENAME_EXCHANGE: exchange source and dest\n"
-	"\t-x\texit codes: 0=ok 1=fail 2=EINVAL(=unsupported mode) 42=help\n"
+	"\texit codes: 0=ok 1=fail 2=EINVAL(=unsupported mode) 42=help\n"
 	, NULL);
 
     case 'f':	mode=0;			modestr="0";			break;
