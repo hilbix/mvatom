@@ -418,7 +418,8 @@ main(int argc, char **argv)
                       TINO_GETOPT_STRING
                       "c dir	Create backups in the given directory.\n"
                       "		This moves an existing destination into the given dir,\n"
-                      "		possibly renaming it according to options -a and -b"
+                      "		possibly renaming it with option -b.  With option -a\n"
+                      "		it moves the source into the backup directory (with rename)"
                       , &m_backupdir,
 
                       TINO_GETOPT_STRING
