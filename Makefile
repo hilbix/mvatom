@@ -1,7 +1,7 @@
 # Makefile automatically generated, do not edit!
 # This output (only this Makefile) is Public Domain.
 #
-#@MD5TINOIGN@ Creation date: Fri Aug 20 09:21:06 CEST 2021
+#@MD5TINOIGN@ Creation date: Sun Feb 11 19:07:00 CET 2024
 #
 # This file is based on following files:
 #@MD5TINOIGN@ 1: Makefile.tino
@@ -188,6 +188,6 @@ $(PROG1).o:  mvatom.c tino/filetool.h tino/file.h tino/sysfix.h \
 
 
 # included: rename2.d
-$(PROG2).o:  rename2.c
+$(PROG2).o:  rename2.c mvatom_version.h
 
 # end
