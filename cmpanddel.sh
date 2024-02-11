@@ -311,8 +311,6 @@ then
 	return
 fi
 
-prot "$SRC/$1"
-
 if [ -L "$dst" -o ! -d "$dst" ]
 then
 	unp
@@ -320,13 +318,11 @@ then
 	return
 fi
 
-if ! rmdir "$pf"
+if ! rmdir "$SRC/$1"
 then
-	unp
-	echo "$pf not empty"
+	echo "$SRC/$1 not empty"
 	return
 fi
-unpf=""
 }
 
 usage "$@"
